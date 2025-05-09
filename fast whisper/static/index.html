@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fast Whisper 实时转录</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Fast Whisper 实时语音转录</h1>
+            <p>高效、准确的语音转文字服务</p>
+        </header>
+
+        <main>
+            <div class="transcription-box">
+                <div class="controls">
+                    <button id="startRecording" class="button primary">
+                        <span class="icon">🎤</span> 开始录音
+                    </button>
+                    <button id="stopRecording" class="button secondary" disabled>
+                        <span class="icon">⏹️</span> 停止录音
+                    </button>
+                    <div class="file-upload">
+                        <label for="audioFile" class="button">
+                            <span class="icon">📁</span> 上传音频
+                        </label>
+                        <input type="file" id="audioFile" accept=".mp3,.wav,.m4a,.ogg,.flac" />
+                    </div>
+                </div>
+
+                <div class="status-indicators">
+                    <div id="recordingStatus" class="status">
+                        <span class="dot"></span>
+                        <span class="text">连接中...</span>
+                    </div>
+                    <div id="timeElapsed">00:00</div>
+                </div>
+
+                <div class="result-container">
+                    <div class="result-header">
+                        <span class="label">实时转录</span>
+                    </div>
+                    <div id="liveTranscription" class="live-text"></div>
+
+                    <div class="result-header">
+                        <span class="label">完整转录</span>
+                    </div>
+                    <div id="completeTranscription" class="complete-text"></div>
+                </div>
+
+                <div class="processing-indicator" id="processingIndicator">
+                    <div class="spinner"></div>
+                    <div class="text">处理中...</div>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h2>已完成的转录</h2>
+                <div id="transcriptionHistory" class="history-list">
+                    <!-- 历史转录将在这里动态添加 -->
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>支持的音频格式: MP3, WAV, M4A, OGG, FLAC</p>
+            <p>&copy; 2023 Fast Whisper 实时转录</p>
+        </footer>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+
+</html>
