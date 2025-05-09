@@ -7,6 +7,15 @@ let recordingActive = false;
 let websocket = null;
 let webSocketConnected = false;
 
+// 服务端VAD配置
+const serverVADConfig = {
+    vad_filter: true,                // 是否启用VAD过滤
+    vad_threshold: 0.5,              // VAD阈值(0-1之间，越高越严格)
+    min_speech_duration_ms: 250,     // 最小语音持续时间(毫秒)
+    min_silence_duration_ms: 2000,   // 最小静默持续时间(毫秒)
+    speech_pad_ms: 300               // 语音片段前后填充时间(毫秒)
+};
+
 // DOM元素
 const startRecordingBtn = document.getElementById('startRecording');
 const stopRecordingBtn = document.getElementById('stopRecording');
@@ -26,11 +35,67 @@ function init() {
     stopRecordingBtn.addEventListener('click', stopRecording);
     audioFileInput.addEventListener('change', handleFileUpload);
 
+    // 设置面板事件监听
+    initSettingsPanel();
+
     // 检查麦克风权限
     checkMicrophonePermission();
 
     // 初始化WebSocket连接
     initWebSocket();
+}
+
+// 初始化设置面板
+function initSettingsPanel() {
+    const showSettingsBtn = document.getElementById('showSettingsBtn');
+    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const applySettingsBtn = document.getElementById('applySettingsBtn');
+
+    // 阈值滑块实时显示
+    const vadThreshold = document.getElementById('vadThreshold');
+    const vadThresholdValue = document.getElementById('vadThresholdValue');
+
+    // 显示设置面板
+    showSettingsBtn.addEventListener('click', () => {
+        settingsPanel.classList.remove('hidden');
+    });
+
+    // 关闭设置面板
+    closeSettingsBtn.addEventListener('click', () => {
+        settingsPanel.classList.add('hidden');
+    });
+
+    // 更新阈值显示
+    vadThreshold.addEventListener('input', () => {
+        vadThresholdValue.textContent = vadThreshold.value;
+    });
+
+    // 应用设置
+    applySettingsBtn.addEventListener('click', () => {
+        // 收集设置值
+        const newConfig = {
+            vad_filter: document.getElementById('vadFilter').checked,
+            vad_threshold: parseFloat(document.getElementById('vadThreshold').value),
+            min_speech_duration_ms: parseInt(document.getElementById('minSpeechDuration').value),
+            min_silence_duration_ms: parseInt(document.getElementById('minSilenceDuration').value),
+            speech_pad_ms: parseInt(document.getElementById('speechPadMs').value)
+        };
+
+        // 更新并发送设置
+        updateServerVADConfig(newConfig);
+
+        // 关闭设置面板
+        settingsPanel.classList.add('hidden');
+
+        // 显示提示
+        recordingStatus.querySelector('.text').textContent = 'VAD设置已更新';
+        setTimeout(() => {
+            if (!recordingActive) {
+                recordingStatus.querySelector('.text').textContent = '准备就绪';
+            }
+        }, 2000);
+    });
 }
 
 // 初始化WebSocket连接
@@ -50,6 +115,9 @@ function initWebSocket() {
             webSocketConnected = true;
             // 更新UI以反映连接状态
             recordingStatus.querySelector('.text').textContent = '准备就绪';
+
+            // 发送服务端VAD配置
+            sendServerVADConfig();
         };
 
         websocket.onmessage = (event) => {
@@ -73,6 +141,30 @@ function initWebSocket() {
     } catch (error) {
         console.error('初始化WebSocket失败:', error);
     }
+}
+
+// 发送服务端VAD配置
+function sendServerVADConfig() {
+    if (webSocketConnected) {
+        try {
+            const configMsg = `CONFIG:VAD:${JSON.stringify(serverVADConfig)}`;
+            websocket.send(configMsg);
+            console.log('已发送服务端VAD配置:', serverVADConfig);
+        } catch (error) {
+            console.error('发送VAD配置失败:', error);
+        }
+    }
+}
+
+// 更新服务端VAD配置参数
+function updateServerVADConfig(newConfig) {
+    // 更新配置
+    Object.assign(serverVADConfig, newConfig);
+
+    // 发送到服务器
+    sendServerVADConfig();
+
+    console.log('已更新服务端VAD配置:', serverVADConfig);
 }
 
 // 处理从WebSocket接收到的消息

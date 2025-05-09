@@ -327,6 +327,73 @@ footer {
     font-size: 0.9rem;
 }
 
+/* 设置面板样式 */
+.settings-panel {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.settings-panel.hidden {
+    display: none;
+}
+
+.settings-header {
+    background-color: #f0f3f9;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.settings-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #4b5563;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    line-height: 1;
+}
+
+.close-btn:hover {
+    color: #4b5563;
+}
+
+.settings-content {
+    padding: 20px;
+}
+
+.setting-item {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.setting-label {
+    width: 200px;
+    font-size: 0.9rem;
+    color: #4b5563;
+    font-weight: 500;
+}
+
+.slider {
+    width: 200px;
+    margin-right: 10px;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
     .container {

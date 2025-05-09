@@ -16,6 +16,7 @@ import numpy as np
 import wave
 import io
 import base64
+import json
 
 # 设置日志
 logging.basicConfig(level=logging.INFO)
@@ -65,6 +66,21 @@ class TranscriptionResult(BaseModel):
     segments: List[Dict[str, Any]]
     language: str
     processing_time: float
+
+# 服务端VAD配置
+class ServerVADConfig:
+    # 定义默认VAD参数
+    def __init__(self):
+        # VAD相关参数
+        self.vad_filter = True                # 是否启用VAD过滤
+        self.vad_threshold = 0.5              # VAD阈值(0-1之间，越高越严格)
+        self.min_speech_duration_ms = 250     # 最小语音持续时间(毫秒)
+        self.min_silence_duration_ms = 2000   # 最小静默持续时间(毫秒)
+        self.window_size_samples = 1024       # VAD窗口大小
+        self.speech_pad_ms = 300              # 语音片段前后填充时间(毫秒)
+
+# 创建全局VAD配置实例
+vad_config = ServerVADConfig()
 
 # 初始化Whisper模型
 # 这里使用"tiny"模型以便快速加载，实际使用时可以选择更大的模型如"base"、"small"、"medium"、"large"
@@ -123,6 +139,26 @@ async def websocket_endpoint(websocket: WebSocket):
                 audio_buffer = []  # 重置缓冲区
                 continue
             
+            # 检查是否是VAD配置命令
+            if data.startswith("CONFIG:VAD:"):
+                try:
+                    # 解析VAD配置
+                    config_data = data[11:] # 去掉前缀"CONFIG:VAD:"
+                    # 使用JSON解析
+                    config_dict = json.loads(config_data)
+                    
+                    # 更新VAD配置
+                    for key, value in config_dict.items():
+                        if hasattr(vad_config, key):
+                            setattr(vad_config, key, value)
+                            logger.info(f"更新VAD配置 {key}={value}")
+                    
+                    await manager.send_text("VAD配置已更新", websocket)
+                except Exception as e:
+                    logger.error(f"更新VAD配置时出错: {str(e)}")
+                    await manager.send_text(f"ERROR:更新VAD配置失败 - {str(e)}", websocket)
+                continue
+            
             # 处理音频数据
             try:
                 # 解码Base64音频数据
@@ -175,20 +211,36 @@ async def process_audio_buffer(audio_buffer, model):
             temp_audio_path = temp_audio.name
         
         try:
-            # 使用Whisper模型转录
-            segments, info = model.transcribe(temp_audio_path, beam_size=5)
+            # 使用Whisper模型转录，添加VAD配置
+            logger.info(f"开始转录音频: {temp_audio_path}, VAD配置: vad_filter={vad_config.vad_filter}, threshold={vad_config.vad_threshold}")
+            
+            # 应用VAD过滤
+            segments, info = model.transcribe(
+                temp_audio_path, 
+                beam_size=5,
+                vad_filter=vad_config.vad_filter,
+                vad_parameters={
+                    "threshold": vad_config.vad_threshold,
+                    "min_speech_duration_ms": vad_config.min_speech_duration_ms,
+                    "min_silence_duration_ms": vad_config.min_silence_duration_ms,
+                    "window_size_samples": vad_config.window_size_samples,
+                    "speech_pad_ms": vad_config.speech_pad_ms
+                }
+            )
             
             # 提取文本
             transcription_text = ""
             for segment in segments:
                 transcription_text += segment.text + " "
             
+            logger.info(f"转录完成: '{transcription_text.strip()}'")
             return transcription_text.strip()
         
         finally:
             # 清理临时文件
             if os.path.exists(temp_audio_path):
                 os.remove(temp_audio_path)
+                logger.info(f"已删除临时文件: {temp_audio_path}")
     
     except Exception as e:
         logger.exception(f"处理音频缓冲区时出错: {str(e)}")
