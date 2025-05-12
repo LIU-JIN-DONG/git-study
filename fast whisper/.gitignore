@@ -1,0 +1,70 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 虚拟环境
+venv/
+ENV/
+env/
+.env
+
+# IDE 相关
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# 日志文件
+*.log
+logs/
+
+# 模型和数据文件
+*.weights
+*.pt
+*.pth
+*.h5
+*.pkl
+*.model
+model/
+models/
+data/
+datasets/
+*.wav
+*.mp3
+*.m4a
+
+# 本地配置文件
+config.local.ini
+secrets.ini
+.env.local
+
+# 生成的文件
+/static/gen/
+/static/dist/
+
+# 临时文件
+.tmp/
+tmp/
+
+# 缓存
+.cache/
+.pytest_cache/ 
