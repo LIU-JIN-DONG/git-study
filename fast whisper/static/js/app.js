@@ -6,6 +6,9 @@ let recordingTimer;
 let recordingActive = false;
 let websocket = null;
 let webSocketConnected = false;
+let incrementalTranscriptTimestamp = null;
+let incrementalTranscriptions = [];
+let useIncrementalMode = true; // 默认启用增量模式
 
 // 服务端VAD配置
 const serverVADConfig = {
@@ -43,58 +46,85 @@ function init() {
 
     // 初始化WebSocket连接
     initWebSocket();
+
+    // 更新转写模式显示
+    updateTranscriptionModeDisplay();
 }
 
 // 初始化设置面板
 function initSettingsPanel() {
+    // 获取设置面板按钮和面板
     const showSettingsBtn = document.getElementById('showSettingsBtn');
-    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
     const settingsPanel = document.getElementById('settingsPanel');
+    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
     const applySettingsBtn = document.getElementById('applySettingsBtn');
 
-    // 阈值滑块实时显示
-    const vadThreshold = document.getElementById('vadThreshold');
+    // VAD相关控件
+    const vadFilterCheckbox = document.getElementById('vadFilter');
+    const vadThresholdSlider = document.getElementById('vadThreshold');
     const vadThresholdValue = document.getElementById('vadThresholdValue');
+    const minSpeechDurationInput = document.getElementById('minSpeechDuration');
+    const minSilenceDurationInput = document.getElementById('minSilenceDuration');
+    const speechPadInput = document.getElementById('speechPad');
 
-    // 显示设置面板
-    showSettingsBtn.addEventListener('click', () => {
-        settingsPanel.classList.remove('hidden');
+    // 添加增量模式切换
+    const incrementalModeSection = document.createElement('div');
+    incrementalModeSection.className = 'settings-section';
+    incrementalModeSection.innerHTML = `
+        <h3>转写模式</h3>
+        <div class="setting-item">
+            <label for="incrementalMode">使用实时更新模式：</label>
+            <input type="checkbox" id="incrementalMode" ${useIncrementalMode ? 'checked' : ''}>
+            <span class="description">启用后显示最新的完整识别结果，不会出现文本重复问题</span>
+        </div>
+    `;
+
+    // 将新部分添加到设置面板
+    settingsPanel.querySelector('.settings-content').appendChild(incrementalModeSection);
+
+    // 获取增量模式切换控件
+    const incrementalModeToggle = document.getElementById('incrementalMode');
+
+    // 更新VAD阈值显示
+    vadThresholdSlider.addEventListener('input', function () {
+        vadThresholdValue.textContent = this.value;
     });
 
-    // 关闭设置面板
-    closeSettingsBtn.addEventListener('click', () => {
-        settingsPanel.classList.add('hidden');
-    });
+    // 应用设置时更新增量模式
+    applySettingsBtn.addEventListener('click', function () {
+        // 更新增量模式设置
+        useIncrementalMode = incrementalModeToggle.checked;
+        console.log(`增量转写模式: ${useIncrementalMode ? '启用' : '禁用'}`);
 
-    // 更新阈值显示
-    vadThreshold.addEventListener('input', () => {
-        vadThresholdValue.textContent = vadThreshold.value;
-    });
+        // 更新显示
+        updateTranscriptionModeDisplay();
 
-    // 应用设置
-    applySettingsBtn.addEventListener('click', () => {
         // 收集设置值
         const newConfig = {
-            vad_filter: document.getElementById('vadFilter').checked,
-            vad_threshold: parseFloat(document.getElementById('vadThreshold').value),
-            min_speech_duration_ms: parseInt(document.getElementById('minSpeechDuration').value),
-            min_silence_duration_ms: parseInt(document.getElementById('minSilenceDuration').value),
-            speech_pad_ms: parseInt(document.getElementById('speechPadMs').value)
+            vad_filter: vadFilterCheckbox.checked,
+            vad_threshold: parseFloat(vadThresholdSlider.value),
+            min_speech_duration_ms: parseInt(minSpeechDurationInput.value),
+            min_silence_duration_ms: parseInt(minSilenceDurationInput.value),
+            speech_pad_ms: parseInt(speechPadInput.value)
         };
 
-        // 更新并发送设置
-        updateServerVADConfig(newConfig);
+        // 更新服务端VAD配置
+        console.log('发送VAD配置更新:', newConfig);
+        if (webSocketConnected) {
+            websocket.send(`CONFIG:VAD:${JSON.stringify(newConfig)}`);
+        }
 
         // 关闭设置面板
-        settingsPanel.classList.add('hidden');
+        settingsPanel.classList.remove('visible');
+    });
 
-        // 显示提示
-        recordingStatus.querySelector('.text').textContent = 'VAD设置已更新';
-        setTimeout(() => {
-            if (!recordingActive) {
-                recordingStatus.querySelector('.text').textContent = '准备就绪';
-            }
-        }, 2000);
+    // 显示和隐藏设置面板的事件处理
+    showSettingsBtn.addEventListener('click', function () {
+        settingsPanel.classList.add('visible');
+    });
+
+    closeSettingsBtn.addEventListener('click', function () {
+        settingsPanel.classList.remove('visible');
     });
 }
 
@@ -170,10 +200,31 @@ function updateServerVADConfig(newConfig) {
 // 处理从WebSocket接收到的消息
 function handleWebSocketMessage(message) {
     // 处理不同类型的消息
-    if (message.startsWith('PARTIAL_RESULT:')) {
-        // 显示部分转录结果
-        const result = message.substring('PARTIAL_RESULT:'.length);
-        liveTranscription.textContent = result;
+    if (message.startsWith('INCREMENTAL_RESULT:')) {
+        // 处理增量转录结果
+        const parts = message.substring('INCREMENTAL_RESULT:'.length).split(':');
+
+        // 只有当有两部分数据时才进行处理
+        if (parts.length >= 2) {
+            const transcriptionText = parts[0];
+            const timestamp = parseInt(parts[1], 10);
+
+            // 检查是否是新的转录会话
+            if (incrementalTranscriptTimestamp === null) {
+                incrementalTranscriptTimestamp = timestamp;
+                incrementalTranscriptions = [];
+            }
+
+            // 更新增量转录显示
+            updateIncrementalTranscription(transcriptionText, timestamp);
+        }
+    }
+    else if (message.startsWith('PARTIAL_RESULT:')) {
+        // 显示部分转录结果 - 仅当没有启用增量转录时使用
+        if (!useIncrementalMode) {
+            const result = message.substring('PARTIAL_RESULT:'.length);
+            liveTranscription.textContent = result;
+        }
     }
     else if (message.startsWith('FINAL_RESULT:')) {
         // 显示最终转录结果
@@ -188,6 +239,10 @@ function handleWebSocketMessage(message) {
 
         // 添加到历史记录
         addToHistory({ text: result });
+
+        // 重置增量转录状态
+        incrementalTranscriptTimestamp = null;
+        incrementalTranscriptions = [];
     }
     else if (message.startsWith('ERROR:')) {
         // 显示错误消息
@@ -492,6 +547,32 @@ function addToHistory(result) {
 
     // 将项目添加到历史记录
     transcriptionHistory.prepend(historyItem);
+}
+
+// 更新增量转录显示
+function updateIncrementalTranscription(fullText, timestamp) {
+    // 如果时间戳早于我们的开始时间，忽略
+    if (timestamp < incrementalTranscriptTimestamp) {
+        return;
+    }
+
+    // 直接使用服务器发送的完整文本，不再尝试提取差异
+    incrementalTranscriptions.push({
+        timestamp: Date.now(),
+        text: fullText
+    });
+
+    // 直接显示完整的文本，替代之前的内容
+    liveTranscription.textContent = fullText;
+}
+
+// 添加模式指示器的更新
+function updateTranscriptionModeDisplay() {
+    const modeIndicator = document.getElementById('transcriptionMode');
+    if (modeIndicator) {
+        modeIndicator.textContent = useIncrementalMode ? '(实时更新模式)' : '(标准模式)';
+        modeIndicator.style.display = 'inline';
+    }
 }
 
 // 初始化应用

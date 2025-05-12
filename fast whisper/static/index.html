@@ -36,34 +36,43 @@
                 </div>
 
                 <!-- 服务端VAD配置面板 -->
-                <div id="settingsPanel" class="settings-panel hidden">
-                    <div class="settings-header">
-                        <h3>服务端VAD配置</h3>
-                        <button id="closeSettingsBtn" class="close-btn">×</button>
-                    </div>
+                <div id="settingsPanel" class="settings-panel">
                     <div class="settings-content">
-                        <div class="setting-item">
-                            <label for="vadFilter" class="setting-label">启用VAD过滤:</label>
-                            <input type="checkbox" id="vadFilter" checked>
+                        <div class="settings-header">
+                            <h2>高级设置</h2>
+                            <button id="closeSettingsBtn" class="close-button">×</button>
                         </div>
-                        <div class="setting-item">
-                            <label for="vadThreshold" class="setting-label">VAD阈值 (0-1):</label>
-                            <input type="range" id="vadThreshold" min="0" max="1" step="0.05" value="0.5"
-                                class="slider">
-                            <span id="vadThresholdValue">0.5</span>
+                        <div class="settings-section">
+                            <h3>语音活动检测(VAD)设置</h3>
+                            <div class="setting-item">
+                                <label for="vadFilter">启用VAD过滤：</label>
+                                <input type="checkbox" id="vadFilter" checked>
+                                <span class="description">过滤掉非语音内容</span>
+                            </div>
+                            <div class="setting-item">
+                                <label for="vadThreshold">VAD阈值：</label>
+                                <input type="range" id="vadThreshold" min="0" max="1" step="0.05" value="0.5">
+                                <span id="vadThresholdValue">0.5</span>
+                                <span class="description">值越高，检测越严格（0-1）</span>
+                            </div>
+                            <div class="setting-item">
+                                <label for="minSpeechDuration">最小语音持续时间(ms)：</label>
+                                <input type="number" id="minSpeechDuration" min="50" max="1000" step="50" value="250">
+                                <span class="description">短于此值的语音片段将被忽略</span>
+                            </div>
+                            <div class="setting-item">
+                                <label for="minSilenceDuration">最小静默持续时间(ms)：</label>
+                                <input type="number" id="minSilenceDuration" min="500" max="5000" step="100"
+                                    value="2000">
+                                <span class="description">静默超过此值才会分割语音</span>
+                            </div>
+                            <div class="setting-item">
+                                <label for="speechPad">语音填充时间(ms)：</label>
+                                <input type="number" id="speechPad" min="0" max="1000" step="50" value="300">
+                                <span class="description">在语音片段前后添加的填充时间</span>
+                            </div>
                         </div>
-                        <div class="setting-item">
-                            <label for="minSpeechDuration" class="setting-label">最小语音持续时间 (ms):</label>
-                            <input type="number" id="minSpeechDuration" min="100" max="1000" step="50" value="250">
-                        </div>
-                        <div class="setting-item">
-                            <label for="minSilenceDuration" class="setting-label">最小静默持续时间 (ms):</label>
-                            <input type="number" id="minSilenceDuration" min="500" max="5000" step="100" value="2000">
-                        </div>
-                        <div class="setting-item">
-                            <label for="speechPadMs" class="setting-label">语音前后填充 (ms):</label>
-                            <input type="number" id="speechPadMs" min="0" max="1000" step="50" value="300">
-                        </div>
+                        <!-- 增量模式设置会在JS中动态添加 -->
                         <button id="applySettingsBtn" class="button primary">应用设置</button>
                     </div>
                 </div>
@@ -79,6 +88,7 @@
                 <div class="result-container">
                     <div class="result-header">
                         <span class="label">实时转录</span>
+                        <span id="transcriptionMode" class="mode-indicator">(实时更新模式)</span>
                     </div>
                     <div id="liveTranscription" class="live-text"></div>
 

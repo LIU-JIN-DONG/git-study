@@ -327,71 +327,87 @@ footer {
     font-size: 0.9rem;
 }
 
-/* 设置面板样式 */
-.settings-panel {
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
-    overflow: hidden;
-    transition: all 0.3s ease;
+/* 添加增量模式指示器样式 */
+.mode-indicator {
+    font-size: 0.8em;
+    color: #666;
+    margin-left: 10px;
+    font-style: italic;
 }
 
-.settings-panel.hidden {
+/* 改进设置面板样式 */
+.settings-panel {
     display: none;
+    position: absolute;
+    top: 60px;
+    right: 10px;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    width: 400px;
+    max-width: 90vw;
+}
+
+.settings-panel.visible {
+    display: block;
 }
 
 .settings-header {
-    background-color: #f0f3f9;
-    padding: 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #e5e7eb;
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
 }
 
-.settings-header h3 {
+.settings-header h2 {
     margin: 0;
-    font-size: 1.1rem;
-    color: #4b5563;
+    font-size: 1.2em;
 }
 
-.close-btn {
+.close-button {
     background: none;
     border: none;
-    font-size: 1.5rem;
-    color: #9ca3af;
+    font-size: 1.5em;
     cursor: pointer;
-    padding: 0;
-    margin: 0;
-    line-height: 1;
-}
-
-.close-btn:hover {
-    color: #4b5563;
+    color: #666;
 }
 
 .settings-content {
-    padding: 20px;
+    padding: 15px;
+}
+
+.settings-section {
+    margin-bottom: 20px;
+}
+
+.settings-section h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1em;
+    color: #333;
 }
 
 .setting-item {
-    margin-bottom: 15px;
+    margin-bottom: 12px;
     display: flex;
-    align-items: center;
     flex-wrap: wrap;
+    align-items: center;
 }
 
-.setting-label {
-    width: 200px;
-    font-size: 0.9rem;
-    color: #4b5563;
-    font-weight: 500;
-}
-
-.slider {
-    width: 200px;
+.setting-item label {
+    min-width: 180px;
     margin-right: 10px;
+}
+
+.setting-item .description {
+    width: 100%;
+    margin-top: 5px;
+    margin-left: 180px;
+    font-size: 0.8em;
+    color: #666;
 }
 
 /* 响应式设计 */

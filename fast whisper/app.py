@@ -112,6 +112,8 @@ async def websocket_endpoint(websocket: WebSocket):
         # 音频处理参数
         sample_rate = 16000  # Whisper模型需要16kHz
         audio_buffer = []  # 存储接收到的音频数据
+        processed_duration = 0  # 已处理的音频时长（毫秒）
+        last_processed_length = 0  # 上次处理的音频长度
         
         while True:
             # 接收WebSocket数据
@@ -121,6 +123,8 @@ async def websocket_endpoint(websocket: WebSocket):
             if data == "START_RECORDING":
                 logger.info("开始录音")
                 audio_buffer = []  # 清空缓冲区
+                processed_duration = 0  # 重置已处理时长
+                last_processed_length = 0  # 重置上次处理长度
                 await manager.send_text("录音已开始", websocket)
                 continue
                 
@@ -137,6 +141,8 @@ async def websocket_endpoint(websocket: WebSocket):
                         await manager.send_text(f"ERROR:处理音频失败 - {str(e)}", websocket)
                 
                 audio_buffer = []  # 重置缓冲区
+                processed_duration = 0  # 重置已处理时长
+                last_processed_length = 0  # 重置上次处理长度
                 continue
             
             # 检查是否是VAD配置命令
@@ -169,12 +175,27 @@ async def websocket_endpoint(websocket: WebSocket):
                     
                     # 当累积了足够的音频数据时进行实时转录
                     if len(audio_buffer) >= 5:  # 大约2-3秒的音频
-                        partial_buffer = audio_buffer.copy()  # 创建缓冲区副本进行处理
+                        # 计算当前缓冲区总长度
+                        current_buffer_length = len(audio_buffer)
                         
-                        # 异步处理音频，不阻塞WebSocket连接
-                        asyncio.create_task(
-                            process_and_send_result(partial_buffer, model, websocket)
-                        )
+                        # 如果有新数据，则进行增量处理
+                        if current_buffer_length > last_processed_length:
+                            # 只处理新增部分
+                            partial_buffer = audio_buffer.copy()  # 创建缓冲区副本进行处理
+                            
+                            # 异步处理音频，不阻塞WebSocket连接
+                            asyncio.create_task(
+                                process_and_send_incremental_result(
+                                    partial_buffer, 
+                                    model, 
+                                    websocket, 
+                                    last_processed_length, 
+                                    processed_duration
+                                )
+                            )
+                            
+                            # 更新已处理长度
+                            last_processed_length = current_buffer_length
             
             except Exception as e:
                 logger.error(f"处理音频数据时出错: {str(e)}")
@@ -191,6 +212,27 @@ async def websocket_endpoint(websocket: WebSocket):
             pass
         manager.disconnect(websocket)
 
+# 新增：增量处理音频并返回结果
+async def process_and_send_incremental_result(audio_buffer, model, websocket, prev_processed_length, processed_duration):
+    try:
+        # 处理整个音频缓冲区
+        full_result = await process_audio_buffer(audio_buffer, model)
+        
+        # 向客户端发送增量结果
+        await manager.send_text(f"INCREMENTAL_RESULT:{full_result}:{processed_duration}", websocket)
+        
+        # 同时发送部分结果保持兼容性
+        await manager.send_text(f"PARTIAL_RESULT:{full_result}", websocket)
+        
+        # 更新已处理的音频时间
+        # 假设每块音频约500ms，这个值应该更精确地计算
+        return processed_duration + ((len(audio_buffer) - prev_processed_length) * 500)
+    except Exception as e:
+        logger.error(f"处理增量音频时出错: {str(e)}")
+        await manager.send_text(f"ERROR:处理音频失败 - {str(e)}", websocket)
+        return processed_duration
+
+# 保留原有函数以保持兼容性
 async def process_and_send_result(audio_buffer, model, websocket):
     try:
         result = await process_audio_buffer(audio_buffer, model)
