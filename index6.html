@@ -1,14 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Turn-based Translation Demo (Overlay for STT)</title>
   <!-- Font Awesome (for microphone icon) -->
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
-  />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
   <!-- Azure Speech SDK (STT) -->
   <script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>
   <!-- 添加全局变量定义 -->
@@ -25,6 +23,7 @@
     * {
       box-sizing: border-box;
     }
+
     body {
       margin: 0;
       padding: 0;
@@ -48,7 +47,7 @@
       margin: 20px auto;
       background: #fff;
       border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       padding: 20px;
     }
 
@@ -60,15 +59,18 @@
       gap: 10px;
       margin-bottom: 20px;
     }
+
     .settings-row label {
       font-size: 0.9rem;
       color: #333;
     }
+
     .settings-row select {
       margin: 0 5px;
       padding: 4px 8px;
       font-size: 0.9rem;
     }
+
     .settings-row button {
       padding: 6px 12px;
       font-size: 0.9rem;
@@ -79,6 +81,7 @@
       border-radius: 4px;
       transition: background-color 0.2s ease;
     }
+
     .settings-row button:hover {
       background-color: #3b5ce8;
     }
@@ -89,6 +92,7 @@
       color: #444;
       margin-left: 10px;
     }
+
     .status-inline span {
       font-weight: bold;
       color: #333;
@@ -100,6 +104,7 @@
       gap: 26px;
       margin-bottom: 20px;
     }
+
     .column {
       flex: 1;
       display: flex;
@@ -127,6 +132,7 @@
       gap: 10px;
       flex-wrap: wrap;
     }
+
     .btn-send,
     .btn-record {
       padding: 8px 16px;
@@ -137,19 +143,24 @@
       transition: background-color 0.2s ease;
       color: #fff;
     }
+
     .btn-send {
       background-color: #4c6ef5;
     }
+
     .btn-send:hover {
       background-color: #3b5ce8;
     }
+
     .btn-record {
       background-color: #adb5bd;
       display: flex;
       align-items: center;
       gap: 6px;
-      min-width: 120px; /* 给按钮留些空间显示时长 */
+      min-width: 120px;
+      /* 给按钮留些空间显示时长 */
     }
+
     .btn-record:hover {
       background-color: #868e96;
     }
@@ -161,6 +172,7 @@
       justify-content: space-between;
       margin-bottom: 8px;
     }
+
     .log-title {
       font-size: 1rem;
       font-weight: bold;
@@ -168,6 +180,7 @@
       border-left: 4px solid #4c6ef5;
       padding-left: 8px;
     }
+
     .log-toggle-btn {
       padding: 6px 12px;
       border: none;
@@ -178,6 +191,7 @@
       transition: background-color 0.2s ease;
       font-size: 0.9rem;
     }
+
     .log-toggle-btn:hover {
       background-color: #868e96;
     }
@@ -187,6 +201,7 @@
       border-top: 1px solid #ccc;
       padding-top: 10px;
     }
+
     .log-collapsed {
       display: none;
     }
@@ -199,9 +214,11 @@
       line-height: 1.3;
       white-space: pre-wrap;
     }
+
     .log-item p {
       margin: 4px 0;
     }
+
     .log-item p:first-child {
       font-weight: bold;
       color: #333;
@@ -219,6 +236,7 @@
       min-width: 80px;
       font-size: 1rem;
     }
+
     #playPauseBtn:hover {
       background-color: #3b5ce8;
     }
@@ -227,14 +245,17 @@
     #audioPlayer {
       margin-top: 20px;
     }
-    #audioPlayer > div {
+
+    #audioPlayer>div {
       display: flex;
       align-items: center;
       gap: 10px;
     }
+
     #speedRange {
       width: 100px;
     }
+
     #progressRange {
       flex: 1;
     }
@@ -242,24 +263,32 @@
     /* ======= 新增的遮罩层(Overlay)样式 ======= */
     .overlay {
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.5);
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
       z-index: 9999;
-      display: none; /* 默认隐藏 */
+      display: none;
+      /* 默认隐藏 */
       align-items: center;
       justify-content: center;
     }
+
     .overlay.show {
-      display: flex;  /* 显示时采用flex居中 */
+      display: flex;
+      /* 显示时采用flex居中 */
     }
+
     .overlay-content {
       background: #fff;
       padding: 20px;
       width: 90%;
       max-width: 600px;
       border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     }
+
     .overlay-textarea {
       width: 100%;
       min-height: 200px;
@@ -269,6 +298,7 @@
       border-radius: 4px;
       resize: vertical;
     }
+
     #overlayStopBtn {
       background-color: #4c6ef5;
       color: #fff;
@@ -279,6 +309,7 @@
       cursor: pointer;
       margin-top: 10px;
     }
+
     #overlayStopBtn:hover {
       background-color: #3b5ce8;
     }
@@ -287,24 +318,45 @@
     .btn-record.connected {
       background-color: #4c6ef5;
     }
+
     .btn-record.connecting {
       background-color: #ffd43b;
     }
+
     .btn-record.waiting {
       animation: blinkYellow 1s infinite;
     }
+
     .btn-record.recording {
       animation: blinkRed 1s infinite;
     }
+
     @keyframes blinkYellow {
-      0% { background-color: #4c6ef5; }
-      50% { background-color: #748ffc; }
-      100% { background-color: #4c6ef5; }
+      0% {
+        background-color: #4c6ef5;
+      }
+
+      50% {
+        background-color: #748ffc;
+      }
+
+      100% {
+        background-color: #4c6ef5;
+      }
     }
+
     @keyframes blinkRed {
-      0% { background-color: #fa5252; }
-      50% { background-color: #ff8787; }
-      100% { background-color: #fa5252; }
+      0% {
+        background-color: #fa5252;
+      }
+
+      50% {
+        background-color: #ff8787;
+      }
+
+      100% {
+        background-color: #fa5252;
+      }
     }
 
     .audio-controls {
@@ -312,6 +364,7 @@
       gap: 10px;
       margin-top: 8px;
     }
+
     .audio-btn {
       background-color: #4c6ef5;
       color: #fff;
@@ -322,24 +375,29 @@
       cursor: pointer;
       transition: background-color 0.2s;
     }
+
     .audio-btn:hover {
       background-color: #3b5ce8;
     }
 
     @media (max-width: 768px) {
+
       .text-columns,
-      #audioPlayer > div {
+      #audioPlayer>div {
         flex-direction: column;
       }
+
       .column {
         width: 100%;
       }
+
       .column textarea {
         min-height: 300px;
       }
     }
   </style>
 </head>
+
 <body>
   <header>
     Turn-based Translation Demo (Overlay for STT)
@@ -391,7 +449,7 @@
         </select>
       </label>
       <button id="applyManualBtn">Apply Settings</button>
-      
+
       <!-- 显示ML/TL状态 -->
       <div class="status-inline">
         ML: <span id="spanMainLang">unset</span> |
@@ -432,10 +490,10 @@
       <div>
         <button id="playPauseBtn">Play</button>
         <span><label for="speedRange">Speed:</label>
-        <input type="range" id="speedRange" min="0.5" max="2" step="0.1" value="1">
-        <span id="speedValue">1.0x</span></span>
+          <input type="range" id="speedRange" min="0.5" max="2" step="0.1" value="1">
+          <span id="speedValue">1.0x</span></span>
         <span><input type="range" id="progressRange" min="0" max="100" value="0">
-        <span id="currentTime">00:00</span> / <span id="duration">00:00</span></span>
+          <span id="currentTime">00:00</span> / <span id="duration">00:00</span></span>
       </div>
     </div>
 
@@ -467,13 +525,11 @@
     // ============= Replace with your own keys (NOT safe for production) ============
 
     // OpenAI (Whisper + GPT)
-    const OPENAI_API_KEY = "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";
     const OPENAI_WHISPER_URL = "https://api.openai.com/v1/audio/transcriptions";
     const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
     const OPENAI_TTS_URL = "https://api.openai.com/v1/audio/speech"; // OpenAI TTS API
 
     // Azure TTS
-    const AZURE_TTS_KEY = "Db35GXzCs4MRIXvE34L9Q6iShIUkSmpCtvVE70wd9Ob07POsdqcxJQQJ99BCAC4f1cMXJ3w3AAAYACOGR66e";
     const AZURE_TTS_ENDPOINT = "https://westus.tts.speech.microsoft.com/cognitiveservices/v1";
 
     // Azure STT (语音转写)
@@ -494,7 +550,7 @@
     let streamTranscribeTimeoutId = null;
     // 添加语言自动检测标志
     let detectedLanguage = null;
-    
+
     /*************************************************************
      * 2. 全局变量 & 工具函数
      *************************************************************/
@@ -571,7 +627,7 @@
     // 添加数据发送计数器变量（移至全局作用域）
     let dataSendCounter = 0;
     let totalDataSent = 0;
-    
+
     // 添加识别器初始化超时变量
     let initRecognizerTimeout = null;
     const MAX_RECOGNIZER_INIT_TIME = 5000; // 最大等待识别器初始化的时间(5秒)
@@ -579,46 +635,46 @@
     // ADPCM 解码表 - 从index.html复制过来
     const idxtbl = [-1, -1, -1, -1, 2, 4, 6, 8, -1, -1, -1, -1, 2, 4, 6, 8];
     const steptbl = [
-      7, 8, 9, 10, 11, 12, 13, 14, 16,17,19,21,23,25,28,31,
-      34,37,41,45,50,55,60,66,73,80,88,97,107,118,130,143,
-      157,173,190,209,230,253,279,307,337,371,408,449,494,544,
-      598,658,724,796,876,963,1060,1166,1282,1411,1552,1707,1878,2066,
-      2272,2499,2749,3024,3327,3660,4026,4428,4871,5358,5894,6484,7132,7845,8630,9493,
-      10442,11487,12635,13899,15289,16818,18500,20350,22385,24623,27086,29794,32767
+      7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31,
+      34, 37, 41, 45, 50, 55, 60, 66, 73, 80, 88, 97, 107, 118, 130, 143,
+      157, 173, 190, 209, 230, 253, 279, 307, 337, 371, 408, 449, 494, 544,
+      598, 658, 724, 796, 876, 963, 1060, 1166, 1282, 1411, 1552, 1707, 1878, 2066,
+      2272, 2499, 2749, 3024, 3327, 3660, 4026, 4428, 4871, 5358, 5894, 6484, 7132, 7845, 8630, 9493,
+      10442, 11487, 12635, 13899, 15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767
     ];
 
     // ADPCM 解码函数 - 从index.html复制过来
     function adpcmToPcm(ps, pd) {
       let sampleCount = ps[3] * 2;
-      let predict = (ps[0] | (ps[1]<<8))<<16>>16;
+      let predict = (ps[0] | (ps[1] << 8)) << 16 >> 16;
       let predict_idx = ps[2];
 
       let pcode = ps.slice(4);
       let code = pcode.shift();
 
-      for (let i=0; i<sampleCount; i++) {
+      for (let i = 0; i < sampleCount; i++) {
         let step = steptbl[predict_idx];
         let diffq = step >> 3;
         if (code & 4) diffq += step;
-        step >>=1;
+        step >>= 1;
         if (code & 2) diffq += step;
-        step >>=1;
+        step >>= 1;
         if (code & 1) diffq += step;
 
         if (code & 8) predict -= diffq;
         else predict += diffq;
 
-        if (predict>32767) predict=32767; else if (predict<-32768) predict=-32768;
+        if (predict > 32767) predict = 32767; else if (predict < -32768) predict = -32768;
         predict_idx += idxtbl[code & 15];
-        if (predict_idx<0) predict_idx=0; else if (predict_idx>88) predict_idx=88;
+        if (predict_idx < 0) predict_idx = 0; else if (predict_idx > 88) predict_idx = 88;
 
         if (i & 1) {
           code = pcode.shift();
         } else {
-          code >>=4;
+          code >>= 4;
         }
         pd.push(predict & 0xFF);
-        pd.push((predict >>8) & 0xFF);
+        pd.push((predict >> 8) & 0xFF);
       }
     }
 
@@ -644,7 +700,7 @@
 
       let offset = 44;
       for (let i = 0; i < dataSize; i += 2) {
-        const sample = (pcmData[i+1] << 8) | pcmData[i];
+        const sample = (pcmData[i + 1] << 8) | pcmData[i];
         view.setInt16(offset, sample, true);
         offset += 2;
       }
@@ -653,8 +709,8 @@
     }
 
     function writeString(dv, offset, str) {
-      for (let i=0; i<str.length; i++) {
-        dv.setUint8(offset+i, str.charCodeAt(i));
+      for (let i = 0; i < str.length; i++) {
+        dv.setUint8(offset + i, str.charCodeAt(i));
       }
     }
 
@@ -686,7 +742,7 @@
             'Ocp-Apim-Subscription-Key': AZURE_SPEECH_KEY
           }
         });
-        
+
         if (response.ok) {
           console.log("Azure服务可用");
           return true;
@@ -704,7 +760,7 @@
     function initBLERecognizer() {
       try {
         console.log("Initializing speech recognizer...");
-        
+
         if (!AZURE_SPEECH_KEY || AZURE_SPEECH_KEY.trim() === "") {
           console.error("Azure speech key not set");
           return null;
@@ -712,9 +768,9 @@
 
         connectionEstablished = false;
         recognizerInitComplete = false;
-        
+
         const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(AZURE_SPEECH_KEY, AZURE_SPEECH_REGION);
-        
+
         // Language configuration
         let recognitionLanguage = "en-US"; // Default
         const languageMap = {
@@ -744,7 +800,7 @@
         // Create the push stream for audio data
         const pushStream = SpeechSDK.AudioInputStream.createPushStream();
         const audioConfig = SpeechSDK.AudioConfig.fromStreamInput(pushStream);
-        
+
         // Create recognizer based on whether we have a main language set
         let recognizer;
         if (mainLanguage && languageMap[mainLanguage]) {
@@ -759,7 +815,7 @@
             Object.values(languageMap),
             "en-US" // Default language if detection fails
           );
-          
+
           recognizer = new SpeechSDK.SpeechRecognizer(
             speechConfig,
             audioConfig,
@@ -770,7 +826,7 @@
 
         // Store push stream reference
         recognizer.pushStream = pushStream;
-        
+
         // Set up event handlers with detailed logging
         recognizer.recognizing = (s, e) => {
           console.log("[Recognizing Event]", {
@@ -784,27 +840,27 @@
             const text = e.result.text || "";
             if (text.trim()) {
               console.log("[Recognizing] Interim result:", text);
-              
+
               // Update current partial text
               currentPartialText = text;
-              
+
               // Construct display text
               let displayText = accumulatedText;
               if (displayText && !displayText.endsWith(".") && !displayText.endsWith("。")) {
                 displayText += " ";
               }
               displayText += currentPartialText;
-              
+
               console.log("[Recognizing] Display text:", {
                 accumulatedText,
                 currentPartialText,
                 finalDisplay: displayText
               });
-              
+
               // Update display
               inputText.value = displayText;
               inputText.scrollTop = inputText.scrollHeight;
-              
+
               // Trigger real-time translation
               performRealTimeTranslation(displayText);
             }
@@ -823,7 +879,7 @@
             const text = e.result.text || "";
             if (text.trim()) {
               console.log("[Recognized] Final result:", text);
-              
+
               // Get detected language if available
               let detectedLang = null;
               if (e.result.properties) {
@@ -839,7 +895,7 @@
                   console.warn("[Recognized] Failed to get language:", err);
                 }
               }
-              
+
               // Update accumulated text
               if (accumulatedText) {
                 if (!accumulatedText.endsWith(".") && !accumulatedText.endsWith("。")) {
@@ -849,25 +905,25 @@
               } else {
                 accumulatedText = text;
               }
-              
+
               console.log("[Recognized] Updated text:", {
                 previousAccumulated: accumulatedText,
                 newText: text,
                 finalAccumulated: accumulatedText
               });
-              
+
               // Clear partial text since we have a final result
               currentPartialText = "";
-              
+
               // Update display
               inputText.value = accumulatedText;
               inputText.scrollTop = inputText.scrollHeight;
-              
+
               // Update connection status
               connectionEstablished = true;
               azureConnectionFailed = false;
               connectionRetryCount = 0;
-              
+
               // Trigger translation
               performRealTimeTranslation(accumulatedText);
             }
@@ -882,7 +938,7 @@
             isNewSession: isNewRecordingSession,
             sessionId: e.sessionId
           });
-          
+
           if (isNewRecordingSession) {
             console.log("[Session] Clearing text for new session");
             accumulatedText = "";
@@ -902,14 +958,14 @@
 
         // Connection monitoring with detailed logging
         const connection = SpeechSDK.Connection.fromRecognizer(recognizer);
-        
+
         connection.connected = (e) => {
           console.log("[Connection] Connected", {
             timestamp: new Date().toISOString()
           });
           connectionEstablished = true;
         };
-        
+
         connection.disconnected = (e) => {
           console.log("[Connection] Disconnected", {
             timestamp: new Date().toISOString()
@@ -968,13 +1024,13 @@
 
           // 翻译文本
           const translated = await translateByChatGPT(text, actualTargetLang);
-          
+
           if (translated) {
             // 只更新翻译文本显示，不播放TTS
             translatedText.value = translated;
             lastTranslatedText = text;
           }
-          
+
         } catch (err) {
           console.error("翻译错误:", err);
         } finally {
@@ -995,13 +1051,13 @@
 
       translationDebounceTimer = setTimeout(async () => {
         if (!text.trim() || translating) return;
-        
+
         translating = true;
         try {
           // 检测语言
           const detectedRaw = await detectLanguageByChatGPT(text);
           const detectedLang = normalizeLang(detectedRaw);
-          
+
           // 确定目标语言
           let actualTargetLang = forcedTargetLang;
           if (!actualTargetLang) {
@@ -1010,11 +1066,11 @@
           }
 
           const translated = await translateByChatGPT(text, actualTargetLang);
-          
+
           // 更新显示：原文在左侧，翻译在右侧
           translatedText.value = translated;
           lastTranslatedText = text;
-          
+
           console.log(`翻译完成: ${detectedLang} => ${actualTargetLang}`);
         } catch (err) {
           console.error("翻译错误:", err);
@@ -1029,7 +1085,7 @@
       try {
         const adpcmData = new Uint8Array(event.target.value.buffer);
         // console.log("[Voice Data] Received data length:", adpcmData.length);
-        
+
         // 确定哪个麦克风发送的数据
         let micIndex = -1;
         for (let i = 0; i < voiceDataCharacteristics.length; i++) {
@@ -1038,7 +1094,7 @@
             break;
           }
         }
-        
+
         if (micIndex === -1) {
           micIndex = activeMicIndex;
           if (micIndex === -1) {
@@ -1046,7 +1102,7 @@
             return;
           }
         }
-        
+
         // 检查数据包长度和ADPCM头部
         if (adpcmData.length === 128) {
           // 解析ADPCM头部
@@ -1070,53 +1126,53 @@
             console.log('[按钮事件] 检测到按钮按下');
             if (!isBluetoothRecording) {
               // 停止当前TTS播放
-              stopCurrentTTS(); 
-              
+              stopCurrentTTS();
+
               // 标记为新的录音会话
               isNewRecordingSession = true;
               recordingSessionId = Date.now();
-              
+
               // 清空所有文本状态
               accumulatedText = "";
               currentPartialText = "";
               inputText.value = "";
               translatedText.value = "";
-              
+
               // 重置录音状态
               resetRecordingState(true); // true表示清空input
               activeMicIndex = micIndex; // 设置当前活动麦克风
-              
+
               // 开始录音
               startBluetoothRecording();
             }
             return;
           }
-          
+
           // 检测按钮释放 - 基于观察到的模式
           if (predict === 65448 && predict_idx === 25 && audioLength === 124) {
             console.log('[按钮事件] 检测到按钮释放');
             if (isBluetoothRecording && activeMicIndex === micIndex) {
               // 设置按钮触发标志，防止超时检查
               buttonTriggeredStop = true;
-              
+
               // 立即停止所有计时器
               stopRecordingTimers();
-              
+
               // 清除数据检查定时器
               if (checkDataTimeoutInterval) {
                 clearInterval(checkDataTimeoutInterval);
                 checkDataTimeoutInterval = null;
               }
-              
+
               // 清除流式转写定时器
               if (streamTranscribeTimeoutId) {
                 clearTimeout(streamTranscribeTimeoutId);
                 streamTranscribeTimeoutId = null;
               }
-              
+
               // 先设置状态防止其他处理
               isBluetoothRecording = false;
-              
+
               // 停止Azure识别器
               if (bleRecognizer) {
                 try {
@@ -1125,61 +1181,61 @@
                   console.error('停止Azure识别器时出错:', e);
                 }
               }
-              
+
               // 处理录音数据
               if (fullPcmDataArray.length > 1000) {
                 isProcessingData = true;
                 processingStartTime = Date.now();
-                
+
                 // 更新UI为处理中状态
                 const micBtn = activeMicIndex === 0 ? gmicMicBtn : gmicMicBtn2;
                 micBtn.innerHTML = '<i class="fas fa-cog fa-spin"></i> 处理中...';
-                
+
                 try {
                   await processPcmData(true);
-                  
+
                   // 处理完成后，确保UI更新为就绪状态
                   micBtn.classList.remove('recording');
                   micBtn.classList.add('waiting');
-                  micBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC ${micIndex+1} Ready`;
+                  micBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC ${micIndex + 1} Ready`;
                 } catch (error) {
                   console.error('处理录音数据时出错:', error);
                 }
               }
-              
+
               // 结束当前录音会话
               isNewRecordingSession = false;
               recordingSessionId = null;
               buttonTriggeredStop = false;
             }
-          return;
-        }
-        
+            return;
+          }
+
           // 如果是普通的语音数据包，继续处理
           if (!isBluetoothRecording && !isProcessingData) {
-          console.log(`收到麦克风 ${micIndex+1} 语音数据，但未开始录音，自动开始录音`);
-          
-          // 清空输入文本
-          inputText.value = "";
-          translatedText.value = "";
-          
-          activeMicIndex = micIndex; // 设置当前活动麦克风
-          startBluetoothRecording();
-        }
-        
-        // 更新最后数据接收时间
-        lastDataReceivedTime = Date.now();
+            console.log(`收到麦克风 ${micIndex + 1} 语音数据，但未开始录音，自动开始录音`);
 
-        // 解码ADPCM数据为PCM
-        try {
-          const decodedData = decodeADPCM(adpcmData);
-          
-          // 将解码后的PCM数据添加到数组中
-          const array = new Uint8Array(decodedData.buffer);
-          for (let i = 0; i < array.length; i++) {
-            fullPcmDataArray.push(array[i]);
+            // 清空输入文本
+            inputText.value = "";
+            translatedText.value = "";
+
+            activeMicIndex = micIndex; // 设置当前活动麦克风
+            startBluetoothRecording();
           }
-          
+
+          // 更新最后数据接收时间
+          lastDataReceivedTime = Date.now();
+
+          // 解码ADPCM数据为PCM
+          try {
+            const decodedData = decodeADPCM(adpcmData);
+
+            // 将解码后的PCM数据添加到数组中
+            const array = new Uint8Array(decodedData.buffer);
+            for (let i = 0; i < array.length; i++) {
+              fullPcmDataArray.push(array[i]);
+            }
+
             // 实时发送数据到Azure识别器
             if (bleRecognizer && bleRecognizer.pushStream && connectionEstablished) {
               try {
@@ -1195,11 +1251,11 @@
               //   isConnected: connectionEstablished
               // });
             }
-        } catch (error) {
-          console.error(`解码麦克风 ${micIndex+1} ADPCM数据失败:`, error);
+          } catch (error) {
+            console.error(`解码麦克风 ${micIndex + 1} ADPCM数据失败:`, error);
+          }
         }
-        }
-        
+
       } catch (error) {
         console.error("处理语音数据主函数出错:", error);
       }
@@ -1213,7 +1269,7 @@
         clearInterval(bleRecordTimer);
         bleRecordTimer = null;
       }
-      
+
       // 清除数据检查计时器
       if (checkDataTimeoutInterval) {
         console.log("停止数据检查计时器");
@@ -1230,7 +1286,7 @@
       if (isProcessingData || !isBluetoothRecording || buttonTriggeredStop) {
         return;
       }
-      
+
       const now = Date.now();
       // 只在实际录音过程中检查超时
       if (now - lastDataReceivedTime > dataTimeout && isBluetoothRecording) {
@@ -1244,9 +1300,9 @@
         console.log("processPcmData被调用，但isProcessingData为false，中止处理");
         return;
       }
-      
+
       console.log("处理音频数据...");
-      
+
       // 设置处理超时，防止处理卡死
       if (processingTimeoutId) {
         clearTimeout(processingTimeoutId);
@@ -1261,31 +1317,31 @@
         activeMicBtn.classList.add('waiting');
         activeMicBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC Ready`;
       }, MAX_PROCESSING_TIME);
-      
+
       try {
         // 转换PCM数据为WAV格式
         let audioBlob = pcmToWav(fullPcmDataArray, 16000);
-        
+
         // 保存当前录音以便添加到历史记录
         currentAudioBlob = audioBlob;
-        
+
         // 获取已有的转写文本（流式转写已经填充）
         let existingText = inputText.value.trim();
-        
+
         // 如果已有文本包含"正在转写..."或者为空，则发送到Whisper重新进行完整识别
         if (!existingText || existingText === "正在转写..." || existingText.endsWith("...")) {
           const activeMicBtn = activeMicIndex === 0 ? gmicMicBtn : gmicMicBtn2;
           activeMicBtn.innerHTML = '<i class="fas fa-cog fa-spin"></i> 最终转写中...';
-          
+
           // 发送到Whisper进行完整识别
           await sendToWhisper(audioBlob);
         } else {
           console.log("使用现有转写文本:", existingText);
-          
+
           // 使用流式转写已有的文本进行翻译
           await handleInput(existingText);
         }
-        
+
         // 获取翻译后的文本用于TTS
         const translatedContent = translatedText.value.trim();
         if (translatedContent) {
@@ -1300,14 +1356,14 @@
               ttsLang = "en"; // 默认使用英语
             }
           }
-          
+
           // 生成并播放TTS
           // console.log("播放翻译结果的TTS...");
           // await speakTextByAzureTTS(translatedContent, ttsLang);
         } else {
           console.warn("翻译结果为空，跳过TTS生成");
         }
-        
+
         console.log("音频处理完成");
       } catch (error) {
         console.error("处理音频数据时出错:", error);
@@ -1316,87 +1372,87 @@
         if (processingTimeoutId) {
           clearTimeout(processingTimeoutId);
         }
-        
+
         console.log("processPcmData完成，开始重置状态");
         // 确保处理状态被重置
         isProcessingData = false;
-        
+
         // 重置录音状态，但不清除input text
         resetRecordingState(false);
-        
+
         // 确保UI更新为Ready状态
         const activeMicBtn = activeMicIndex === 0 ? gmicMicBtn : gmicMicBtn2;
         activeMicBtn.classList.remove('recording');
         activeMicBtn.classList.add('waiting');
         activeMicBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC Ready`;
-        
+
         console.log("录音会话完全重置，准备好下次录音");
       }
     }
 
     function startBluetoothRecording() {
       console.log("开始蓝牙录音...");
-      
+
       // 停止当前TTS播放
       stopCurrentTTS();
-      
+
       // 防止重复启动
       if (isBluetoothRecording && !isProcessingData) {
         console.log("已经在录音中，忽略此次启动请求");
         isRecognizerInitializing = false; // 重置初始化标志
         return;
       }
-      
+
       // 只有在新会话时才清空文本
       if (isNewRecordingSession) {
         console.log("新录音会话，清空文本");
-      inputText.value = "";
-      translatedText.value = "";
+        inputText.value = "";
+        translatedText.value = "";
         accumulatedText = "";
         currentPartialText = "";
       } else {
         console.log("继续现有会话，保留文本");
       }
-      
+
       // 重置录音状态变量 - 更彻底地清理所有状态
       isBluetoothRecording = true;
       fullPcmDataArray = [];
       lastDataReceivedTime = Date.now();
       lastTranscribeTime = 0;
       streamTranscriptionInProgress = false;
-      
+
       // 只在新会话时重置transcribedText
       if (isNewRecordingSession) {
         transcribedText = "";
       }
-      
+
       // 重置实时转写首次接收标志
       window.hasFirstTranscription = false;
-      
+
       // 启动录音时长计时器
       bleRecordStartTime = Date.now();
       if (bleRecordTimer) {
         clearInterval(bleRecordTimer);
       }
       bleRecordTimer = setInterval(updateBleRecordingTime, 500);
-      
+
       // 更新UI状态
       const activeMicBtn = activeMicIndex === 0 ? gmicMicBtn : gmicMicBtn2;
       activeMicBtn.classList.remove('waiting');
       activeMicBtn.classList.add('recording');
       activeMicBtn.innerHTML = '<i class="fas fa-microphone"></i> GMIC 录音中... (00:00)';
-      
+
       // 启动数据检查定时器
       if (checkDataTimeoutInterval) {
         clearInterval(checkDataTimeoutInterval);
       }
       checkDataTimeoutInterval = setInterval(checkDataTimeout, 500);
-      
+
       // 启动Azure识别 - 确保识别器是活跃的
       if (!bleRecognizer || azureConnectionFailed) {
         console.log("初始化Azure语音识别器...");
         bleRecognizer = initBLERecognizer();
-        
+
         if (bleRecognizer) {
           // 启动识别
           console.log("启动新创建的Azure识别器...");
@@ -1429,15 +1485,15 @@
             if (bleRecognizer) {
               bleRecognizer.close();
             }
-          } catch (e2) {}
-          
+          } catch (e2) { }
+
           bleRecognizer = initBLERecognizer();
           if (bleRecognizer) {
             startBLEAzureRecognition();
           }
         }
       }
-      
+
       // 确保连接状态正确
       connectionEstablished = true;
     }
@@ -1448,17 +1504,17 @@
         // 检查是否需要等待冷却期
         const now = Date.now();
         const timeSinceLastUse = now - lastSpeechServiceUseTime;
-        
+
         if (lastSpeechServiceUseTime > 0 && timeSinceLastUse < DIFFERENT_SESSIONS_DELAY) {
           // 需要等待完成冷却期
           const waitTime = DIFFERENT_SESSIONS_DELAY - timeSinceLastUse;
           console.log(`等待语音服务冷却期 ${waitTime}ms...`);
           await new Promise(resolve => setTimeout(resolve, waitTime));
         }
-        
+
         // 强制清理WebSocket连接
         forceCleanupWebSockets();
-        
+
         // 确保旧实例已完全停止
         if (bleRecognizer) {
           console.log("停止旧识别器并进行清理");
@@ -1472,7 +1528,7 @@
         } else {
           console.log("无旧识别器，直接创建新识别器");
         }
-        
+
         // 初始化新识别器 - 使用默认区域
         console.log("初始化新识别器...");
         bleRecognizer = initBLERecognizer();
@@ -1481,10 +1537,10 @@
           azureConnectionFailed = true;
           return null;
         }
-        
+
         // 更新最后使用时间
         lastSpeechServiceUseTime = Date.now();
-        
+
         // 启动连续识别
         console.log("启动语音识别...");
         return new Promise((resolve, reject) => {
@@ -1510,22 +1566,22 @@
     // 重置录音状态的函数
     function resetRecordingState(clearInputText = true) {
       console.log("重置录音状态 - 完全清理");
-      
+
       // 清除流式转写定时器
       if (streamTranscribeTimeoutId) {
         clearTimeout(streamTranscribeTimeoutId);
         streamTranscribeTimeoutId = null;
       }
-      
+
       // 清除识别器初始化超时计时器
       if (initRecognizerTimeout) {
         clearTimeout(initRecognizerTimeout);
         initRecognizerTimeout = null;
       }
-      
+
       // 先停止所有计时器
       stopRecordingTimers();
-      
+
       // 停止Azure识别器
       if (bleRecognizer) {
         try {
@@ -1550,10 +1606,10 @@
           try {
             bleRecognizer.close();
             bleRecognizer = null;
-          } catch (e2) {}
+          } catch (e2) { }
         }
       }
-      
+
       // 重置关键状态变量
       isBluetoothRecording = false;
       isProcessingData = false;
@@ -1562,18 +1618,18 @@
       lastTranscribeTime = 0;
       lastButtonSignal = -1;
       activeMicIndex = -1; // 重置当前活动麦克风
-      
+
       // 重置转写状态变量
       currentPartialText = "";
       accumulatedText = "";
       lastTranscribedText = "";
-      
+
       // 重置其他状态
       fullPcmDataArray = [];
       dataSendCounter = 0;
       totalDataSent = 0;
       detectedLanguage = null; // 重置检测到的语言
-      
+
       // 根据参数决定是否清空输入框
       if (clearInputText) {
         console.log("清空输入文本");
@@ -1581,11 +1637,11 @@
         translatedText.value = "";
         transcribedText = "";
       }
-      
+
       // 重置录音会话状态
       isNewRecordingSession = false;
       recordingSessionId = null;
-      
+
       console.log("录音状态已完全重置，所有变量已清理");
     }
 
@@ -1626,13 +1682,13 @@
       const audioControls = document.createElement("div");
       audioControls.className = "audio-controls";
       let hasDurationInfo = false;
-      
+
       // 添加用户录音播放按钮
       if (originalAudioBlob) {
         const origAudioBtn = document.createElement("button");
         origAudioBtn.className = "audio-btn";
         origAudioBtn.innerHTML = '<i class="fas fa-play"></i> 原录音';
-        
+
         // 获取音频时长并显示
         getAudioDuration(originalAudioBlob).then(duration => {
           if (duration) {
@@ -1640,19 +1696,19 @@
             hasDurationInfo = true;
           }
         });
-        
-        origAudioBtn.onclick = function() {
+
+        origAudioBtn.onclick = function () {
           playAudioBlob(originalAudioBlob);
         };
         audioControls.appendChild(origAudioBtn);
       }
-      
+
       // 添加TTS播放按钮
       if (ttsAudioBlob) {
         const ttsAudioBtn = document.createElement("button");
         ttsAudioBtn.className = "audio-btn";
         ttsAudioBtn.innerHTML = '<i class="fas fa-play"></i> TTS';
-        
+
         // 获取音频时长并显示
         getAudioDuration(ttsAudioBlob).then(duration => {
           if (duration) {
@@ -1660,26 +1716,26 @@
             hasDurationInfo = true;
           }
         });
-        
-        ttsAudioBtn.onclick = function() {
+
+        ttsAudioBtn.onclick = function () {
           playAudioBlob(ttsAudioBlob);
         };
         audioControls.appendChild(ttsAudioBtn);
-      } 
+      }
       // 如果没有TTS音频，添加生成TTS按钮
       else if (translatedText) {
         const generateTTSBtn = document.createElement("button");
         generateTTSBtn.className = "audio-btn generate-tts";
         generateTTSBtn.innerHTML = '<i class="fas fa-volume-up"></i> 生成TTS';
-        
-        generateTTSBtn.onclick = async function() {
+
+        generateTTSBtn.onclick = async function () {
           // 禁用按钮避免重复点击
           generateTTSBtn.disabled = true;
           generateTTSBtn.textContent = "生成中...";
-          
+
           // 检测语言，如果之前已有翻译目标语言，使用它
           let lang = sessionTranslationTarget;
-          
+
           if (!lang) {
             // 尝试检测语言
             try {
@@ -1690,40 +1746,40 @@
               lang = "en"; // 默认使用英语
             }
           }
-          
+
           // 生成并播放TTS
           try {
             await speakTextByAzureTTS(translatedText, lang);
             console.log("播放翻译结果的TTS 2...");
-            
+
             // 如果生成成功且有新的TTS Blob
             if (currentTTSBlob) {
               // 替换按钮为播放按钮
               const ttsAudioBtn = document.createElement("button");
               ttsAudioBtn.className = "audio-btn";
               ttsAudioBtn.innerHTML = '<i class="fas fa-play"></i> TTS';
-              
+
               // 获取音频时长并显示
               getAudioDuration(currentTTSBlob).then(duration => {
                 if (duration) {
                   ttsAudioBtn.innerHTML += ` ${formatDuration(duration)}`;
                 }
               });
-              
+
               const ttsBlobCopy = currentTTSBlob; // 创建引用副本
-              ttsAudioBtn.onclick = function() {
+              ttsAudioBtn.onclick = function () {
                 playAudioBlob(ttsBlobCopy);
               };
-              
+
               // 替换按钮
               generateTTSBtn.parentNode.replaceChild(ttsAudioBtn, generateTTSBtn);
-              
+
               // 更新历史记录
-              const index = audioHistory.findIndex(item => 
-                item.timestamp === timestamp && 
-                item.originalText === originalText && 
+              const index = audioHistory.findIndex(item =>
+                item.timestamp === timestamp &&
+                item.originalText === originalText &&
                 item.translatedText === translatedText);
-              
+
               if (index !== -1) {
                 audioHistory[index].ttsAudio = ttsBlobCopy;
               }
@@ -1738,10 +1794,10 @@
             generateTTSBtn.innerHTML = '<i class="fas fa-volume-up"></i> 重试生成';
           }
         };
-        
+
         audioControls.appendChild(generateTTSBtn);
       }
-      
+
       if (audioControls.children.length > 0) {
         logItem.appendChild(audioControls);
       }
@@ -1751,7 +1807,7 @@
       } else {
         container.appendChild(logItem);
       }
-      
+
       // 保存到历史记录数组
       audioHistory.push({
         timestamp: timestamp,
@@ -1766,22 +1822,22 @@
     function playAudioBlob(blob) {
       // 先停止当前TTS播放
       stopCurrentTTS();
-      
+
       const url = URL.createObjectURL(blob);
       const audioElement = document.getElementById("ttsAudio");
       audioElement.src = url;
       audioElement.load();
-      
+
       // 应用保存的播放速度
       audioElement.playbackRate = savedPlaybackSpeed;
-      
+
       audioElement.play();
-      
+
       // 更新播放按钮状态
       document.getElementById("playPauseBtn").textContent = "Pause";
-      
+
       // 播放完成后释放URL
-      audioElement.onended = function() {
+      audioElement.onended = function () {
         URL.revokeObjectURL(url);
       };
     }
@@ -1800,10 +1856,10 @@
       if (!lang) return null;
       let l = lang.toLowerCase();
       const supportedLangs = [
-        'zh', 'en', 'fr', 'es', 'de', 'it', 'ja', 
+        'zh', 'en', 'fr', 'es', 'de', 'it', 'ja',
         'ko', 'ru', 'pt', 'ar', 'hi', 'tr', 'nl', 'pl'
       ];
-      
+
       // Handle special cases
       if (l.startsWith('zh')) return 'zh';
       if (l.startsWith('en')) return 'en';
@@ -1820,7 +1876,7 @@
       if (l.startsWith('tr')) return 'tr';
       if (l.startsWith('nl')) return 'nl';
       if (l.startsWith('pl')) return 'pl';
-      
+
       // If language not in supported list, return null
       return supportedLangs.includes(l) ? l : null;
     }
@@ -1887,37 +1943,37 @@
       try {
         console.log("初始化电脑麦克风Azure识别器...");
         const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(AZURE_SPEECH_KEY, AZURE_SPEECH_REGION);
-        
+
         // 设置语音识别语言
         speechConfig.speechRecognitionLanguage = mainLanguage || "zh-CN";
-        
+
         // 启用连续识别模式
         speechConfig.enableDictation();
-        
+
         // 关键区别：使用fromStreamInput而不是pushStream
         const audioConfig = SpeechSDK.AudioConfig.fromStreamInput(stream);
         const rec = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
-        
+
         // 实时识别事件
         rec.recognizing = (s, e) => {
           if (e.result && e.result.text) {
             currentPartialText = e.result.text;
-            const fullText = accumulatedText + 
-                         (accumulatedText && currentPartialText ? " " : "") + 
-                         currentPartialText;
-            
+            const fullText = accumulatedText +
+              (accumulatedText && currentPartialText ? " " : "") +
+              currentPartialText;
+
             // 更新显示 - 保持已有文本，只在末尾添加新的部分
             if (inputText.value && !inputText.value.endsWith(fullText)) {
               inputText.value = inputText.value + " " + text;
             } else if (!inputText.value) {
               inputText.value = text;
             }
-            
+
             // 实时翻译
             performRealTimeTranslation(inputText.value);
           }
         };
-        
+
         // 识别完成事件
         rec.recognized = (s, e) => {
           if (e.result && e.result.text) {
@@ -1925,30 +1981,30 @@
             // 将完成的识别文本添加到累积文本
             accumulatedText += (accumulatedText ? " " : "") + e.result.text;
             currentPartialText = "";
-            
+
             // 更新显示 - 保持已有文本，只在末尾添加新的部分
             if (inputText.value && !inputText.value.endsWith(e.result.text)) {
               inputText.value = inputText.value + " " + e.result.text;
             } else if (!inputText.value) {
               inputText.value = e.result.text;
             }
-            
+
             // 实时翻译
             performRealTimeTranslation(inputText.value);
           }
         };
-        
+
         // 会话开始事件
         rec.sessionStarted = (s, e) => {
           console.log("Azure Speech session started");
           // 只在新会话时清空文本
           if (isNewRecordingSession) {
             console.log("New session: clearing all text");
-          accumulatedText = "";
-          currentPartialText = "";
-          lastTranslatedText = "";
-          inputText.value = "";
-          translatedText.value = "";
+            accumulatedText = "";
+            currentPartialText = "";
+            lastTranslatedText = "";
+            inputText.value = "";
+            translatedText.value = "";
           } else {
             console.log("Continuing session with accumulated text: " + accumulatedText);
           }
@@ -1982,7 +2038,7 @@
         if (!userHasManualMain) {
           mainLanguage = detectedLang;
         }
-          if (!userHasManualTarget) {
+        if (!userHasManualTarget) {
           targetLanguage = detectedLang === "en" ? "zh" : "en";
         }
         translationTarget = targetLanguage;
@@ -2017,7 +2073,7 @@
       }
 
       document.getElementById("outputText").value = translated;
-      
+
       // Only play TTS after final translation is complete
       if (translated && !isBluetoothRecording) {
         await speakTextByAzureTTS(translated, translationTarget || "en");
@@ -2103,20 +2159,20 @@
         // const timestamp = getTimeStamp();
         // translatedText.value = `${timestamp}\n${text}`;
         translatedText.value = text;
-        
+
         // 使用OpenAI的TTS API
         console.log(`使用OpenAI TTS API进行语音合成，语言: ${lang}`);
-        
+
         // 使用gpt-4o-mini-transcribe模型
         const model = "tts-1";
-        
+
         // 对所有语言统一使用shimmer音色
         const voice = "shimmer";
-        
+
         // 添加错误处理和超时
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
-        
+
         const resp = await fetch(OPENAI_TTS_URL, {
           method: "POST",
           headers: {
@@ -2130,44 +2186,44 @@
           }),
           signal: controller.signal
         });
-        
+
         clearTimeout(timeoutId);
-        
+
         if (!resp.ok) {
           throw new Error("OpenAI TTS request failed: " + resp.statusText);
         }
-        
+
         // OpenAI TTS API直接返回音频数据
         const audioData = await resp.arrayBuffer();
         const blob = new Blob([audioData], { type: "audio/mp3" });
-        
+
         // 保存TTS Blob用于历史记录
         currentTTSBlob = blob;
-        
+
         const audioUrl = URL.createObjectURL(blob);
 
         // 使用已隐藏的 audio 元素播放
         const audioElement = document.getElementById("ttsAudio");
-        
+
         // 添加事件监听器以确认加载
         const loadPromise = new Promise((resolve, reject) => {
           audioElement.onloadeddata = resolve;
           audioElement.onerror = reject;
         });
-        
+
         audioElement.src = audioUrl;
         audioElement.load();
-        
+
         // 等待音频加载完成
         await loadPromise;
-        
+
         // 应用保存的播放速度
         audioElement.playbackRate = savedPlaybackSpeed;
-        
+
         // 使用 try-catch 确保播放不会失败
         try {
           const playPromise = audioElement.play();
-          
+
           if (playPromise !== undefined) {
             playPromise.catch(error => {
               console.error("播放音频失败:", error);
@@ -2177,13 +2233,13 @@
               }, 1000);
             });
           }
-          
+
           // 播放按钮状态更新
           document.getElementById("playPauseBtn").textContent = "Pause";
         } catch (playError) {
           console.error("播放音频出错:", playError);
         }
-        
+
         console.log(`OpenAI TTS语音合成完成，使用${voice}音色`);
       } catch (err) {
         console.warn("OpenAI TTS语音合成失败:", err);
@@ -2196,9 +2252,9 @@
           const safeText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
           const ssml =
             "<speak version='1.0' xml:lang='en-US'>" +
-              "<voice name='" + voiceName + "'>" +
-                safeText +
-              "</voice>" +
+            "<voice name='" + voiceName + "'>" +
+            safeText +
+            "</voice>" +
             "</speak>";
 
           const resp = await fetch(AZURE_TTS_ENDPOINT, {
@@ -2216,22 +2272,22 @@
           }
           const audioData = await resp.arrayBuffer();
           const blob = new Blob([audioData], { type: "audio/mp3" });
-          
+
           // 保存TTS Blob用于历史记录
           currentTTSBlob = blob;
-          
+
           const audioUrl = URL.createObjectURL(blob);
 
           // 使用已隐藏的 audio 元素播放
           const audioElement = document.getElementById("ttsAudio");
           audioElement.src = audioUrl;
           audioElement.load();
-          
+
           // 添加更强的错误处理
-          audioElement.oncanplay = function() {
+          audioElement.oncanplay = function () {
             // 应用保存的播放速度
             audioElement.playbackRate = savedPlaybackSpeed;
-            
+
             // 尝试播放
             const playPromise = audioElement.play();
             if (playPromise !== undefined) {
@@ -2243,11 +2299,11 @@
                 }, 1000);
               });
             }
-            
+
             // 播放按钮状态更新
             document.getElementById("playPauseBtn").textContent = "Pause";
           };
-          
+
           console.log("成功退回到Azure TTS");
         } catch (fallbackErr) {
           console.error("Azure TTS也失败了:", fallbackErr);
@@ -2275,7 +2331,7 @@
       // 尝试重新加载
       if (audioElement.src) {
         // setTimeout(() => {
-          audioElement.load();
+        audioElement.load();
         // }, 1000);
       }
     });
@@ -2305,14 +2361,14 @@
       const speed = parseFloat(speedRange.value);
       audioElement.playbackRate = speed;
       speedValue.textContent = speed.toFixed(1) + "x";
-      
+
       // 保存用户设置的播放速度
       savedPlaybackSpeed = speed;
       localStorage.setItem('savedPlaybackSpeed', speed); // 持久化保存
     });
 
     // 页面加载时恢复保存的播放速度
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       const savedSpeed = localStorage.getItem('savedPlaybackSpeed');
       if (savedSpeed) {
         const speed = parseFloat(savedSpeed);
@@ -2357,18 +2413,18 @@
     async function startRecording() {
       // 停止当前TTS播放
       stopCurrentTTS();
-      
+
       // 不再清空输入框，允许保留之前的内容
       // inputText.value = "";
       // translatedText.value = "";
-      
+
       // 不再显示遮罩层，因为我们不再使用它
       // showOverlay();
       // overlayTranscription.value = ""; // 清空遮罩层中的文本
-      
+
       // 更新录音按钮状态
       recordBtn.innerHTML = '<i class="fas fa-microphone"></i> Recording...';
-      
+
       // 获得micStream，只会弹一次权限
       getMicStream().then(stream => {
         // 启动Azure连续识别
@@ -2423,7 +2479,7 @@
       recordTimer = null;
       isRecording = false;
       recordBtn.innerHTML = '<i class="fas fa-microphone"></i> Record';
-      
+
       // 不再关闭遮罩层，因为我们不再使用它
       // hideOverlay();
     }
@@ -2451,7 +2507,7 @@
 
         // 清空input text，再显示Whisper的转写结果
         inputText.value = "";
-        
+
         // 设置Whisper识别结果
         inputText.value = recognizedText;
 
@@ -2497,15 +2553,15 @@
         // 标记为新的录音会话
         isNewRecordingSession = true;
         recordingSessionId = Date.now();
-        
+
         // 清空输入和翻译文本
         inputText.value = "";
         translatedText.value = "";
-        
+
         await startRecording();
       } else {
         stopRecording();
-        
+
         // 结束当前录音会话
         isNewRecordingSession = false;
         recordingSessionId = null;
@@ -2540,12 +2596,12 @@
         tempAudio.addEventListener('loadedmetadata', () => {
           resolve(tempAudio.duration);
         });
-        
+
         // 如果加载失败或无法获取时长，返回未知
         tempAudio.addEventListener('error', () => {
           resolve(null);
         });
-        
+
         tempAudio.src = URL.createObjectURL(blob);
       });
     }
@@ -2564,41 +2620,41 @@
       if (streamTranscriptionInProgress || fullPcmDataArray.length < MIN_PCM_DATA_SIZE_FOR_TRANSCRIPTION) {
         return;
       }
-      
+
       // 防止短时间内重复调用
       const now = Date.now();
       if (now - lastTranscribeTime < TRANSCRIBE_INTERVAL) {
         return;
       }
-      
+
       try {
         streamTranscriptionInProgress = true;
         lastTranscribeTime = now;
-        
+
         // 显示转写中状态
         const activeMicBtn = activeMicIndex === 0 ? gmicMicBtn : gmicMicBtn2;
         const currentText = activeMicBtn.innerHTML;
         if (!currentText.includes("转写中")) {
           activeMicBtn.innerHTML = currentText.replace("录音中", "录音中 (转写中)");
         }
-        
+
         // 创建临时音频数据的副本，避免在处理过程中数据继续增长
         const tempPcmData = new Uint8Array(fullPcmDataArray);
-        
+
         // 转换PCM数据为WAV格式
         const audioBlob = pcmToWav(tempPcmData, 16000);
-        
+
         // 创建FormData对象
         const formData = new FormData();
         formData.append("file", audioBlob, "stream_audio.wav");
         // 使用gpt-4o-mini以获得更好的转录质量
         formData.append("model", "gpt-4o-mini-transcribe");
-        
+
         // 如果已经检测到语言，使用该语言以提高准确性
         if (detectedLanguage) {
           formData.append("language", detectedLanguage);
         }
-        
+
         // 在输入框中显示"正在转写..."的指示符 - 仅在输入框为空时
         if (!inputText.value) {
           inputText.value = "正在转写...";
@@ -2606,11 +2662,11 @@
           // 避免重复添加"..."
           inputText.value += "...";
         }
-        
+
         // 使用超时机制
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
-        
+
         // 发送到OpenAI API进行转写
         const response = await fetch(OPENAI_STREAM_TRANSCRIBE_URL, {
           method: "POST",
@@ -2620,31 +2676,31 @@
           body: formData,
           signal: controller.signal
         });
-        
+
         clearTimeout(timeoutId);
-        
+
         if (!response.ok) {
           throw new Error(`OpenAI转写API返回错误: ${response.status} ${response.statusText}`);
         }
-        
+
         const result = await response.json();
         console.log("OpenAI转写API返回结果:", result);
-        
+
         if (result && result.text) {
           // 获取新的转写文本
           const newText = result.text.trim();
-          
+
           // 如果有新内容，更新转写文本
           if (newText) {
             // 当录音时间超过3秒后，为了避免短语重复，使用新的完整转写替换旧的
             if (Date.now() - bleRecordStartTime > 3000 || !transcribedText) {
               transcribedText = newText;
-            } 
+            }
             // 录音初期，尝试保留已有内容并增量添加
             else if (newText.length > transcribedText.length) {
               transcribedText = newText;
             }
-            
+
             // 如果未检测语言，尝试从结果中检测
             if (!detectedLanguage && transcribedText.length > 5) {
               try {
@@ -2654,28 +2710,28 @@
                 console.error("语言检测失败:", e);
               }
             }
-            
+
             // 在输入框中显示文本 - 直接更新，不管是否为首次
             if (transcribedText !== "正在转写...") {
               inputText.value = transcribedText;
-              
+
               // 同时开始翻译处理
               performRealTimeTranslation(transcribedText);
-              
+
               // 标记已有转写
               window.hasFirstTranscription = true;
             }
-            
+
             console.log("流式转写更新:", transcribedText);
           }
         }
-        
+
         // 恢复按钮状态
         if (activeMicBtn.innerHTML.includes("转写中")) {
           const elapsed = Math.floor((Date.now() - bleRecordStartTime) / 1000);
           const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
           const ss = String(elapsed % 60).padStart(2, "0");
-          activeMicBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC ${activeMicIndex+1} 录音中 (${mm}:${ss})`;
+          activeMicBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC ${activeMicIndex + 1} 录音中 (${mm}:${ss})`;
         }
       } catch (error) {
         console.error("流式转写出错:", error);
@@ -2703,13 +2759,13 @@
             '00001853-0000-1000-8000-00805f9b34fb', // Voice control service
             '00001800-0000-1000-8000-00805f9b34fb', // Generic access
             '00001801-0000-1000-8000-00805f9b34fb', // Generic attribute
-            
+
             // Common characteristics
             '00002a19-0000-1000-8000-00805f9b34fb', // Battery level characteristic
             '00002a00-0000-1000-8000-00805f9b34fb', // Device name
             '00002a01-0000-1000-8000-00805f9b34fb', // Appearance
             '00002b7a-0000-1000-8000-00805f9b34fb', // Button signal characteristic
-            
+
             // Try all possible GATT services
             // Use wildcards for unknown GATT services
             '00001800-0000-1000-8000-00805f9b34fb',
@@ -2723,12 +2779,12 @@
 
         // 如果已存在设备连接，先断开
         if (bluetoothDevices[micIndex] && bluetoothDevices[micIndex].gatt.connected) {
-          console.log(`断开现有设备 ${micIndex+1} 连接`);
+          console.log(`断开现有设备 ${micIndex + 1} 连接`);
           bluetoothDevices[micIndex].gatt.disconnect();
         }
-        
+
         resetBluetoothVariables(micIndex);
-        console.log(`搜索设备 ${micIndex+1} 中...`);
+        console.log(`搜索设备 ${micIndex + 1} 中...`);
         connectTrys = 0;
 
         // 请求用户选择蓝牙设备
@@ -2738,11 +2794,11 @@
           id: bluetoothDevices[micIndex].id,
           connected: bluetoothDevices[micIndex].gatt.connected
         });
-        
+
         // 添加断开连接的事件监听
         bluetoothDevices[micIndex].addEventListener('gattserverdisconnected', () => handleDisconnection(micIndex));
-        console.log(`连接设备 ${micIndex+1}: ${bluetoothDevices[micIndex].name}`);
-        
+        console.log(`连接设备 ${micIndex + 1}: ${bluetoothDevices[micIndex].name}`);
+
         // 连接GATT服务器并设置服务
         await doConnect(voiceServiceUUID1, micIndex);
 
@@ -2750,64 +2806,64 @@
         const micBtn = micIndex === 0 ? gmicMicBtn : gmicMicBtn2;
         micBtn.classList.remove('connecting');
         micBtn.classList.add('connected');
-        micBtn.innerHTML = `<i class="fas fa-bluetooth"></i> Connected ${micIndex+1}`;
+        micBtn.innerHTML = `<i class="fas fa-bluetooth"></i> Connected ${micIndex + 1}`;
 
       } catch (error) {
-        console.error(`Bluetooth Error (Mic ${micIndex+1}):`, error);
+        console.error(`Bluetooth Error (Mic ${micIndex + 1}):`, error);
         const micBtn = micIndex === 0 ? gmicMicBtn : gmicMicBtn2;
         micBtn.classList.remove('connecting', 'connected');
-        micBtn.innerHTML = `<i class="fas fa-bluetooth"></i> GMIC-MIC0${micIndex+1}`;
-        
+        micBtn.innerHTML = `<i class="fas fa-bluetooth"></i> GMIC-MIC0${micIndex + 1}`;
+
         // 显示更友好的错误消息
         if (error.message.includes("GATT Server is disconnected")) {
-          alert(`无法连接麦克风 ${micIndex+1}：蓝牙连接断开。请尝试重新配对设备或重启麦克风。`);
+          alert(`无法连接麦克风 ${micIndex + 1}：蓝牙连接断开。请尝试重新配对设备或重启麦克风。`);
         } else if (error.message.includes("User cancelled")) {
           console.log("用户取消了设备选择");
         } else {
-          alert(`连接麦克风 ${micIndex+1} 失败: ${error.message}`);
+          alert(`连接麦克风 ${micIndex + 1} 失败: ${error.message}`);
         }
-        
+
         bluetoothDevices[micIndex] = null;
       }
     }
 
     async function doConnect(currentUUID, micIndex) {
       try {
-        console.log(`连接 GATT (Mic ${micIndex+1})...`);
-        
+        console.log(`连接 GATT (Mic ${micIndex + 1})...`);
+
         // 确保设备存在且未连接
         if (!bluetoothDevices[micIndex]) {
           throw new Error("设备未初始化");
         }
-        
+
         // 建立GATT连接
         gattServers[micIndex] = await bluetoothDevices[micIndex].gatt.connect();
-        console.log(`已连接到 GATT 服务器 (Mic ${micIndex+1})`);
+        console.log(`已连接到 GATT 服务器 (Mic ${micIndex + 1})`);
 
         // 尝试设置服务
         try {
           await setupServices(currentUUID, micIndex);
-        } catch(e) {
-          console.error(`设置服务失败 (Mic ${micIndex+1}):`, e);
-          
+        } catch (e) {
+          console.error(`设置服务失败 (Mic ${micIndex + 1}):`, e);
+
           // 如果第一个UUID失败，尝试第二个
           if (currentUUID === voiceServiceUUID1) {
-            console.log(`UUID1 失败, 尝试 UUID2 (Mic ${micIndex+1})...`);
+            console.log(`UUID1 失败, 尝试 UUID2 (Mic ${micIndex + 1})...`);
             await setupServices(voiceServiceUUID2, micIndex);
           } else {
             throw e;
           }
         }
       } catch (error) {
-        console.error(`GATT连接失败 (Mic ${micIndex+1}):`, error);
-        
+        console.error(`GATT连接失败 (Mic ${micIndex + 1}):`, error);
+
         // 如果错误是GATT服务器断开，尝试重新连接
         if (error.message.includes("GATT Server is disconnected")) {
           // 最多尝试重连3次
           if (connectTrys < 3) {
             connectTrys++;
             console.log(`尝试重新连接 (尝试 ${connectTrys}/3)...`);
-            
+
             // 等待1秒后重试
             await new Promise(resolve => setTimeout(resolve, 1000));
             return await doConnect(currentUUID, micIndex);
@@ -2824,20 +2880,20 @@
           console.log("GATT服务器未连接，重新连接中...");
           gattServers[micIndex] = await bluetoothDevices[micIndex].gatt.connect();
         }
-        
+
         // 获取所有服务以进行调试
-        console.log(`[蓝牙调试] 获取设备 ${micIndex+1} 的所有服务...`);
+        console.log(`[蓝牙调试] 获取设备 ${micIndex + 1} 的所有服务...`);
         const allServices = await gattServers[micIndex].getPrimaryServices();
         console.log(`[蓝牙调试] 找到 ${allServices.length} 个服务:`);
 
         // 遍历每个服务
         for (const service of allServices) {
           console.log(`\n[服务] UUID: ${service.uuid}`);
-          
+
           // 获取每个服务的特征值
           const characteristics = await service.getCharacteristics();
           console.log(`[特征值] 服务 ${service.uuid} 包含 ${characteristics.length} 个特征值:`);
-          
+
           // 遍历每个特征值
           for (const char of characteristics) {
             console.log(`\n[特征值详情]:`, {
@@ -2890,14 +2946,14 @@
         }
 
         // 继续原有的服务设置逻辑
-        console.log(`\n[设置服务] 尝试查找主服务 (Mic ${micIndex+1}): ${uuid}`);
+        console.log(`\n[设置服务] 尝试查找主服务 (Mic ${micIndex + 1}): ${uuid}`);
         voiceServices[micIndex] = await gattServers[micIndex].getPrimaryService(uuid);
-        console.log(`[设置服务] 找到语音服务 (Mic ${micIndex+1}): ${uuid}`);
-        
+        console.log(`[设置服务] 找到语音服务 (Mic ${micIndex + 1}): ${uuid}`);
+
         // 先设置语音数据特征值
-        console.log(`尝试查找语音数据特征值 (Mic ${micIndex+1}): ${voiceDataCharacteristicUUID}`);
+        console.log(`尝试查找语音数据特征值 (Mic ${micIndex + 1}): ${voiceDataCharacteristicUUID}`);
         voiceDataCharacteristics[micIndex] = await voiceServices[micIndex].getCharacteristic(voiceDataCharacteristicUUID);
-        console.log(`找到语音数据特征值 (Mic ${micIndex+1}), 属性:`, voiceDataCharacteristics[micIndex].properties);
+        console.log(`找到语音数据特征值 (Mic ${micIndex + 1}), 属性:`, voiceDataCharacteristics[micIndex].properties);
 
         // 添加事件监听器
         const onVoiceDataChanged = async (event) => {
@@ -2919,7 +2975,7 @@
         await new Promise(resolve => setTimeout(resolve, 100));
 
         // 设置按钮控制特征值
-        console.log(`尝试查找按钮特征值 (Mic ${micIndex+1}): ${buttonCharacteristicUUID}`);
+        console.log(`尝试查找按钮特征值 (Mic ${micIndex + 1}): ${buttonCharacteristicUUID}`);
         const buttonCharacteristic = await voiceServices[micIndex].getCharacteristic(buttonCharacteristicUUID);
         console.log('找到按钮信号特征值:', {
           uuid: buttonCharacteristic.uuid,
@@ -2942,22 +2998,22 @@
             console.log('[按钮事件] 收到第一次信号，开始录音');
             if (!isBluetoothRecording) {
               // 停止当前TTS播放
-              stopCurrentTTS(); 
-              
+              stopCurrentTTS();
+
               // 标记为新的录音会话
               isNewRecordingSession = true;
               recordingSessionId = Date.now();
-              
+
               // 清空所有文本状态
               accumulatedText = "";
               currentPartialText = "";
               inputText.value = "";
               translatedText.value = "";
-              
+
               // 重置录音状态
               resetRecordingState(true); // true表示清空input
               activeMicIndex = micIndex; // 设置当前活动麦克风
-              
+
               // 开始录音
               startBluetoothRecording();
             }
@@ -2967,25 +3023,25 @@
             if (isBluetoothRecording && activeMicIndex === micIndex) {
               // 设置按钮触发标志，防止超时检查
               buttonTriggeredStop = true;
-              
+
               // 立即停止所有计时器
               stopRecordingTimers();
-              
+
               // 清除数据检查定时器
               if (checkDataTimeoutInterval) {
                 clearInterval(checkDataTimeoutInterval);
                 checkDataTimeoutInterval = null;
               }
-              
+
               // 清除流式转写定时器
               if (streamTranscribeTimeoutId) {
                 clearTimeout(streamTranscribeTimeoutId);
                 streamTranscribeTimeoutId = null;
               }
-              
+
               // 先设置状态防止其他处理
               isBluetoothRecording = false;
-              
+
               // 停止Azure识别器
               if (bleRecognizer) {
                 try {
@@ -2994,40 +3050,40 @@
                   console.error('停止Azure识别器时出错:', e);
                 }
               }
-              
+
               // 处理录音数据
               if (fullPcmDataArray.length > 1000) {
                 isProcessingData = true;
                 processingStartTime = Date.now();
-                
+
                 // 更新UI为处理中状态
                 const micBtn = activeMicIndex === 0 ? gmicMicBtn : gmicMicBtn2;
                 micBtn.innerHTML = '<i class="fas fa-cog fa-spin"></i> 处理中...';
-                
+
                 try {
                   await processPcmData(true);
-                  
+
                   // 处理完成后，确保UI更新为就绪状态
                   micBtn.classList.remove('recording');
                   micBtn.classList.add('waiting');
-                  micBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC ${micIndex+1} Ready`;
+                  micBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC ${micIndex + 1} Ready`;
                 } catch (error) {
                   console.error('处理录音数据时出错:', error);
                 }
               }
-              
+
               // 结束当前录音会话
               isNewRecordingSession = false;
               recordingSessionId = null;
               buttonTriggeredStop = false;
             }
           }
-          
+
           // 切换信号标志
           isFirstSignal = !isFirstSignal;
         });
 
-        console.log(`按钮信号通知已启动 (Mic ${micIndex+1})`);
+        console.log(`按钮信号通知已启动 (Mic ${micIndex + 1})`);
 
         // 写入初始状态 (0 = 语音结束)
         try {
@@ -3036,14 +3092,14 @@
 
           // 保存按钮特征值引用，用于后续控制
           window[`buttonCharacteristic_${micIndex}`] = buttonCharacteristic;
-          
-          // 更新UI状态
-        const micBtn = micIndex === 0 ? gmicMicBtn : gmicMicBtn2;
-        micBtn.classList.remove('connecting');
-        micBtn.classList.add('waiting');
-        micBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC ${micIndex+1} Ready`;
 
-          console.log(`设备 ${micIndex+1} 设置完成，可以使用`);
+          // 更新UI状态
+          const micBtn = micIndex === 0 ? gmicMicBtn : gmicMicBtn2;
+          micBtn.classList.remove('connecting');
+          micBtn.classList.add('waiting');
+          micBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC ${micIndex + 1} Ready`;
+
+          console.log(`设备 ${micIndex + 1} 设置完成，可以使用`);
           return true;
         } catch (writeError) {
           console.error('写入按钮状态失败:', writeError);
@@ -3051,31 +3107,31 @@
         }
 
       } catch (error) {
-        console.error(`[蓝牙错误] 设置服务失败 (Mic ${micIndex+1}):`, error);
+        console.error(`[蓝牙错误] 设置服务失败 (Mic ${micIndex + 1}):`, error);
         throw error;
       }
     }
 
     // 处理蓝牙断开连接
     function handleDisconnection(micIndex) {
-      console.log(`Bluetooth device ${micIndex+1} disconnected`);
-      
+      console.log(`Bluetooth device ${micIndex + 1} disconnected`);
+
       if (activeMicIndex === micIndex) {
         isBluetoothRecording = false;
         isProcessingData = false; // 确保处理状态被重置
       }
-      
+
       const micBtn = micIndex === 0 ? gmicMicBtn : gmicMicBtn2;
       micBtn.classList.remove('connecting', 'waiting', 'recording', 'connected');
-      micBtn.innerHTML = `<i class="fas fa-bluetooth"></i> GMIC-MIC0${micIndex+1}`;
-      
+      micBtn.innerHTML = `<i class="fas fa-bluetooth"></i> GMIC-MIC0${micIndex + 1}`;
+
       resetBluetoothVariables(micIndex);
-      
+
       // 在断开连接5秒后尝试自动重连
       setTimeout(() => {
         // 只有在用户未手动重连的情况下尝试自动重连
         if (!bluetoothDevices[micIndex] || !bluetoothDevices[micIndex].gatt.connected) {
-          console.log(`尝试自动重连设备 ${micIndex+1}...`);
+          console.log(`尝试自动重连设备 ${micIndex + 1}...`);
           // 此处不直接调用connectGMICMic因为它会弹出设备选择对话框
           // 相反，如果设备引用仍然存在，尝试直接重连
           if (bluetoothDevices[micIndex]) {
@@ -3084,36 +3140,36 @@
         }
       }, 5000);
     }
-    
+
     // 新增：尝试重新连接设备的函数
     async function tryReconnect(micIndex) {
       const micBtn = micIndex === 0 ? gmicMicBtn : gmicMicBtn2;
       micBtn.classList.add('connecting');
       micBtn.innerHTML = `<i class="fas fa-sync fa-spin"></i> 正在重连...`;
-      
+
       try {
         if (bluetoothDevices[micIndex]) {
-          console.log(`尝试重连设备 ${micIndex+1}`);
+          console.log(`尝试重连设备 ${micIndex + 1}`);
           gattServers[micIndex] = await bluetoothDevices[micIndex].gatt.connect();
-          console.log(`重连成功, 设置服务 (Mic ${micIndex+1})`);
-          
+          console.log(`重连成功, 设置服务 (Mic ${micIndex + 1})`);
+
           // 重新设置服务
           await setupServices(voiceServiceUUID, micIndex);
-          
-          console.log(`设备 ${micIndex+1} 重连成功`);
+
+          console.log(`设备 ${micIndex + 1} 重连成功`);
           micBtn.classList.remove('connecting');
           micBtn.classList.add('connected');
-          micBtn.innerHTML = `<i class="fas fa-bluetooth"></i> 已重连 ${micIndex+1}`;
+          micBtn.innerHTML = `<i class="fas fa-bluetooth"></i> 已重连 ${micIndex + 1}`;
         } else {
           throw new Error("设备引用已丢失，无法重连");
         }
       } catch (error) {
-        console.error(`重连失败 (Mic ${micIndex+1}):`, error);
+        console.error(`重连失败 (Mic ${micIndex + 1}):`, error);
         micBtn.classList.remove('connecting', 'connected');
-        micBtn.innerHTML = `<i class="fas fa-bluetooth"></i> GMIC-MIC0${micIndex+1}`;
+        micBtn.innerHTML = `<i class="fas fa-bluetooth"></i> GMIC-MIC0${micIndex + 1}`;
       }
     }
-    
+
     // 重置蓝牙变量
     function resetBluetoothVariables(micIndex = -1) {
       if (micIndex >= 0) {
@@ -3136,67 +3192,67 @@
     // 修改startBluetoothRecording函数 - 适配多麦克风
     function startBluetoothRecording() {
       console.log("开始蓝牙录音...");
-      
+
       // 停止当前TTS播放
       stopCurrentTTS();
-      
+
       // 防止重复启动
       if (isBluetoothRecording && !isProcessingData) {
         console.log("已经在录音中，忽略此次启动请求");
         isRecognizerInitializing = false; // 重置初始化标志
         return;
       }
-      
+
       // 只有在新会话时才清空文本
       if (isNewRecordingSession) {
         console.log("新录音会话，清空文本");
-      inputText.value = "";
-      translatedText.value = "";
+        inputText.value = "";
+        translatedText.value = "";
         accumulatedText = "";
         currentPartialText = "";
       } else {
         console.log("继续现有会话，保留文本");
       }
-      
+
       // 重置录音状态变量 - 更彻底地清理所有状态
       isBluetoothRecording = true;
       fullPcmDataArray = [];
       lastDataReceivedTime = Date.now();
       lastTranscribeTime = 0;
       streamTranscriptionInProgress = false;
-      
+
       // 只在新会话时重置transcribedText
       if (isNewRecordingSession) {
         transcribedText = "";
       }
-      
+
       // 重置实时转写首次接收标志
       window.hasFirstTranscription = false;
-      
+
       // 启动录音时长计时器
       bleRecordStartTime = Date.now();
       if (bleRecordTimer) {
         clearInterval(bleRecordTimer);
       }
       bleRecordTimer = setInterval(updateBleRecordingTime, 500);
-      
+
       // 更新UI状态
       const activeMicBtn = activeMicIndex === 0 ? gmicMicBtn : gmicMicBtn2;
       activeMicBtn.classList.remove('waiting');
       activeMicBtn.classList.add('recording');
       activeMicBtn.innerHTML = '<i class="fas fa-microphone"></i> GMIC 录音中... (00:00)';
-      
+
       // 启动数据检查定时器
       if (checkDataTimeoutInterval) {
         clearInterval(checkDataTimeoutInterval);
       }
       checkDataTimeoutInterval = setInterval(checkDataTimeout, 500);
-      
+
       // 启动Azure识别 - 确保识别器是活跃的
       if (!bleRecognizer || azureConnectionFailed) {
         console.log("初始化Azure语音识别器...");
         bleRecognizer = initBLERecognizer();
-        
+
         if (bleRecognizer) {
           // 启动识别
           console.log("启动新创建的Azure识别器...");
@@ -3229,8 +3285,8 @@
             if (bleRecognizer) {
               bleRecognizer.close();
             }
-          } catch (e2) {}
-          
+          } catch (e2) { }
+
           bleRecognizer = initBLERecognizer();
           if (bleRecognizer) {
             startBLEAzureRecognition();
@@ -3242,27 +3298,27 @@
     // 更新录音时长显示的函数
     function updateBleRecordingTime() {
       if (!bleRecordStartTime || !isBluetoothRecording || activeMicIndex < 0) return;
-      
+
       const elapsed = Math.floor((Date.now() - bleRecordStartTime) / 1000);
       const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
       const ss = String(elapsed % 60).padStart(2, "0");
-      
+
       // 更新当前活动麦克风录音按钮显示时长
       const activeMicBtn = activeMicIndex === 0 ? gmicMicBtn : gmicMicBtn2;
-      
+
       if (activeMicBtn.innerHTML.includes("GMIC")) {
-        activeMicBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC ${activeMicIndex+1} 录音中 (${mm}:${ss})`;
+        activeMicBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC ${activeMicIndex + 1} 录音中 (${mm}:${ss})`;
       }
     }
 
     // 停止Azure识别器
     async function stopAzureRecognizer() {
       console.log("停止Azure识别器...");
-      
+
       // 状态标记
       const stopStartTime = Date.now();
       let isStopped = false;
-      
+
       // 创建一个超时保护
       const timeoutPromise = new Promise((resolve) => {
         setTimeout(() => {
@@ -3272,7 +3328,7 @@
           }
         }, 5000); // 5秒超时
       });
-      
+
       // 实际停止操作
       const stopPromise = new Promise((resolve) => {
         try {
@@ -3299,15 +3355,15 @@
           resolve(false);
         }
       });
-      
+
       // 等待停止完成或超时
       const result = await Promise.race([stopPromise, timeoutPromise]);
-      
+
       // 不管是否超时，都进行资源清理
       try {
         // 强制清理连接
         forceCleanupWebSockets();
-        
+
         // 明确设置为null确保GC回收
         if (bleRecognizer) {
           try {
@@ -3317,51 +3373,51 @@
           }
           bleRecognizer = null;
         }
-        
+
         // 重置关键状态变量，确保无论如何都更新UI状态
         isBluetoothRecording = false;
         isProcessingData = false;
         isRecognizerInitializing = false;
-        
+
         console.log("Azure识别器资源已清理");
       } catch (e) {
         console.error("清理Azure识别器资源时出错:", e);
       }
-      
+
       return result;
     }
 
     // 重置录音状态，确保所有资源正确释放
     async function resetRecordingState(clearInputText = true) {
       console.log("重置录音状态...");
-      
+
       // 重置按钮触发标志
       buttonTriggeredStop = false;
-      
+
       // 重置连接状态
       connectionEstablished = false;
       recognizerInitComplete = false;
-      
+
       // 重置数据缓冲区
       if (typeof pendingDataBuffer !== 'undefined') {
         pendingDataBuffer = [];
       }
-      
+
       // 重置麦克风状态
       isRecording = false;
       recordingStartTime = 0;
       startButtonClicked = false;
       recordingDuration = 0;
       recordingInterval = null;
-      
+
       // 重置录音相关变量
       recordedChunks = [];
       activeRecorder = null;
       actualSampleRate = 0;
-      
+
       // 等待短暂时间确保资源释放
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       console.log("录音状态已完全重置，所有变量已清理");
       return true;
     }
@@ -3369,28 +3425,28 @@
     // 修改发送缓冲区数据的相关代码
     function sendPendingBufferData(recognizer) {
       if (!recognizer || !recognizer.pushStream) return false;
-      
+
       let successCount = 0;
       let failCount = 0;
-      
+
       console.log(`准备发送缓冲数据(${pendingDataBuffer.length}个)...`);
-      
+
       // 逐个发送缓冲区数据
       while (pendingDataBuffer.length > 0) {
         const bufferData = pendingDataBuffer.shift();
-        
+
         // 安全检查
         if (!bufferData) {
           console.warn("跳过无效的缓冲数据");
           failCount++;
           continue;
         }
-        
+
         try {
           // 尝试创建数据副本发送
           const dataView = new Int16Array(bufferData);
           const bufferCopy = dataView.slice().buffer;
-          
+
           if (recognizer.pushStream.write(bufferCopy)) {
             successCount++;
           } else {
@@ -3402,7 +3458,7 @@
           break;
         }
       }
-      
+
       console.log(`缓冲数据发送结果: 成功=${successCount}, 失败=${failCount}`);
       return successCount > 0;
     }
@@ -3483,19 +3539,19 @@
     // 强制清理WebSocket连接的函数
     function forceCleanupWebSockets() {
       console.log("强制清理WebSocket连接...");
-      
+
       // 尝试关闭全局SpeechSDK连接
       if (window.SpeechSDK && window.SpeechSDK.Connection) {
         try {
           // 尝试查找可能的连接清理方法
           const connectionModule = window.SpeechSDK.Connection;
-          
+
           // 尝试不同可能的方法名
           if (typeof connectionModule.closeAll === 'function') {
             connectionModule.closeAll();
             console.log("已执行SpeechSDK.Connection.closeAll()");
           }
-          
+
           if (typeof connectionModule.closeConnection === 'function') {
             connectionModule.closeConnection();
             console.log("已执行SpeechSDK.Connection.closeConnection()");
@@ -3504,7 +3560,7 @@
           console.warn("尝试关闭SpeechSDK连接时出错:", e);
         }
       }
-      
+
       // 尝试关闭所有可能活动的WebSocket
       try {
         if (window.speechsdk && window.speechsdk.CognitiveSubscriptionKeyAuthentication) {
@@ -3514,13 +3570,13 @@
       } catch (e) {
         console.warn("清理speechsdk认证状态时出错:", e);
       }
-      
+
       // 重置所有连接相关状态
       connectionEstablished = false;
       recognizerInitComplete = false;
       azureConnectionFailed = false;
       connectionRetryCount = 0;
-      
+
       console.log("WebSocket连接清理完成");
     }
 
@@ -3530,17 +3586,17 @@
         // 检查是否需要等待冷却期
         const now = Date.now();
         const timeSinceLastUse = now - lastSpeechServiceUseTime;
-        
+
         if (lastSpeechServiceUseTime > 0 && timeSinceLastUse < DIFFERENT_SESSIONS_DELAY) {
           // 需要等待完成冷却期
           const waitTime = DIFFERENT_SESSIONS_DELAY - timeSinceLastUse;
           console.log(`等待语音服务冷却期 ${waitTime}ms...`);
           await new Promise(resolve => setTimeout(resolve, waitTime));
         }
-        
+
         // 强制清理WebSocket连接
         forceCleanupWebSockets();
-        
+
         // 确保旧实例已完全停止
         if (bleRecognizer) {
           console.log("停止旧识别器并进行清理");
@@ -3554,7 +3610,7 @@
         } else {
           console.log("无旧识别器，直接创建新识别器");
         }
-        
+
         // 初始化新识别器 - 使用默认区域
         console.log("初始化新识别器...");
         bleRecognizer = initBLERecognizer();
@@ -3563,10 +3619,10 @@
           azureConnectionFailed = true;
           return null;
         }
-        
+
         // 更新最后使用时间
         lastSpeechServiceUseTime = Date.now();
-        
+
         // 启动连续识别
         console.log("启动语音识别...");
         return new Promise((resolve, reject) => {
@@ -3593,22 +3649,22 @@
     function decodeADPCM(adpcmData) {
       // 确保adpcmData是数组格式
       const adpcmArray = Array.from(adpcmData);
-      
+
       // 先解码到PCM数组
       let pcmData = [];
       adpcmToPcm(adpcmArray, pcmData);
-      
+
       // 创建Int16Array用于Azure识别器
       const pcmInt16 = new Int16Array(pcmData.length / 2);
       for (let i = 0; i < pcmData.length; i += 2) {
         // 注意：这里需要使用小端序格式
-        pcmInt16[i/2] = (pcmData[i+1] << 8) | pcmData[i];
+        pcmInt16[i / 2] = (pcmData[i + 1] << 8) | pcmData[i];
       }
-      
+
       return pcmInt16;
     }
 
-    
+
     // 创建Azure实时转写状态元素
     const azureStatus = document.createElement("div");
     azureStatus.id = "azureStatus";
@@ -3621,53 +3677,53 @@
     azureStatus.style.fontSize = "1rem";
     azureStatus.style.maxWidth = "100%";
     azureStatus.textContent = "准备接收实时转写...";
-    
+
     // 添加到页面
     document.querySelector(".container").insertBefore(azureStatus, document.querySelector(".text-columns"));
-    
+
     // 显示Azure实时转写结果的函数
     function showAzureTranscription(text) {
       if (!text || text.trim() === "") return;
-      
+
       // 更新状态显示
       azureStatus.textContent = text;
-      
+
       // 更新输入框文本 - 始终更新以显示最新内容
       inputText.value = text;
       inputText.scrollTop = inputText.scrollHeight;
-      
+
       // 实时翻译文本
       performRealTimeTranslation(text);
-      
+
       // 如果是首次收到结果，标记已收到
       if (!window.hasFirstTranscription) {
         window.hasFirstTranscription = true;
       }
-      
+
       // 记录连接状态正常
       azureConnectionFailed = false;
     }
 
     // 修改绑定蓝牙麦克风按钮事件
     gmicMicBtn.addEventListener('click', async () => {
-        handleMicButtonClick(0);
+      handleMicButtonClick(0);
     });
 
     gmicMicBtn2.addEventListener('click', async () => {
-        handleMicButtonClick(1);
+      handleMicButtonClick(1);
     });
 
     // 统一处理麦克风按钮点击事件
     async function handleMicButtonClick(micIndex) {
-        if (!bluetoothDevices[micIndex] || !bluetoothDevices[micIndex].gatt.connected) {
+      if (!bluetoothDevices[micIndex] || !bluetoothDevices[micIndex].gatt.connected) {
         // 如果未连接，尝试连接设备
-            const micBtn = micIndex === 0 ? gmicMicBtn : gmicMicBtn2;
-            micBtn.classList.add('connecting');
-            micBtn.textContent = `Connecting Mic ${micIndex+1}...`;
-            await connectGMICMic(micIndex);
-        } else {
-            // 如果已连接，点击按钮开始/停止录音
-            if (!isBluetoothRecording && !isRecognizerInitializing && !isProcessingData) {
+        const micBtn = micIndex === 0 ? gmicMicBtn : gmicMicBtn2;
+        micBtn.classList.add('connecting');
+        micBtn.textContent = `Connecting Mic ${micIndex + 1}...`;
+        await connectGMICMic(micIndex);
+      } else {
+        // 如果已连接，点击按钮开始/停止录音
+        if (!isBluetoothRecording && !isRecognizerInitializing && !isProcessingData) {
           try {
             buttonTriggeredStop = false;  // 重置标志
             // 获取按钮特征值引用
@@ -3677,25 +3733,25 @@
               await buttonCharacteristic.writeValueWithoutResponse(new Uint8Array([1]));
               console.log('[按钮控制] 已发送开始录音命令');
             }
-            
+
             // 标记为新的录音会话
             isNewRecordingSession = true;
             recordingSessionId = Date.now();
-                
-                // 清空输入和输出文本
-                inputText.value = "";
-                translatedText.value = "";
-                
-                // 完全重置状态后开始录音
-                resetRecordingState(true);
-                // 设置当前活动麦克风
-                activeMicIndex = micIndex;
-                // 开始录音
-                startBluetoothRecording();
+
+            // 清空输入和输出文本
+            inputText.value = "";
+            translatedText.value = "";
+
+            // 完全重置状态后开始录音
+            resetRecordingState(true);
+            // 设置当前活动麦克风
+            activeMicIndex = micIndex;
+            // 开始录音
+            startBluetoothRecording();
           } catch (error) {
             console.error('发送开始录音命令失败:', error);
           }
-            } else if (isBluetoothRecording && !isProcessingData && activeMicIndex === micIndex) {
+        } else if (isBluetoothRecording && !isProcessingData && activeMicIndex === micIndex) {
           try {
             // 设置按钮触发标志
             buttonTriggeredStop = true;
@@ -3708,25 +3764,25 @@
               await buttonCharacteristic.writeValueWithoutResponse(new Uint8Array([0]));
               console.log('[按钮控制] 已发送停止录音命令');
             }
-            
+
             // 立即停止所有计时器
-                stopRecordingTimers();
-            
+            stopRecordingTimers();
+
             // 清除数据检查定时器
             if (checkDataTimeoutInterval) {
               clearInterval(checkDataTimeoutInterval);
               checkDataTimeoutInterval = null;
             }
-                
-                // 清除流式转写定时器
-                if (streamTranscribeTimeoutId) {
-                    clearTimeout(streamTranscribeTimeoutId);
-                    streamTranscribeTimeoutId = null;
-                }
-                
+
+            // 清除流式转写定时器
+            if (streamTranscribeTimeoutId) {
+              clearTimeout(streamTranscribeTimeoutId);
+              streamTranscribeTimeoutId = null;
+            }
+
             // 先设置状态防止其他处理
             isBluetoothRecording = false;
-            
+
             // 停止Azure识别器
             if (bleRecognizer) {
               try {
@@ -3735,37 +3791,37 @@
                 console.error('停止Azure识别器时出错:', e);
               }
             }
-            
+
             // 处理录音数据
-                if (fullPcmDataArray.length > 1000) {
-                    isProcessingData = true;
+            if (fullPcmDataArray.length > 1000) {
+              isProcessingData = true;
               processingStartTime = Date.now();
-              
+
               // 更新UI为处理中状态
               const micBtn = activeMicIndex === 0 ? gmicMicBtn : gmicMicBtn2;
               micBtn.innerHTML = '<i class="fas fa-cog fa-spin"></i> 处理中...';
-              
+
               try {
                 await processPcmData(true);
-                
+
                 // 处理完成后，确保UI更新为就绪状态
-                        micBtn.classList.remove('recording');
-                        micBtn.classList.add('waiting');
-                        micBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC ${micIndex+1} Ready`;
+                micBtn.classList.remove('recording');
+                micBtn.classList.add('waiting');
+                micBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC ${micIndex + 1} Ready`;
               } catch (error) {
                 console.error('处理录音数据时出错:', error);
-                    }
-                } else {
+              }
+            } else {
               // 数据太少，重置状态但不清空input
-                    resetRecordingState(false);
-              
+              resetRecordingState(false);
+
               // 更新UI状态
               const micBtn = activeMicIndex === 0 ? gmicMicBtn : gmicMicBtn2;
-                    micBtn.classList.remove('recording');
-                    micBtn.classList.add('waiting');
-                    micBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC ${micIndex+1} Ready`;
-                }
-            
+              micBtn.classList.remove('recording');
+              micBtn.classList.add('waiting');
+              micBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC ${micIndex + 1} Ready`;
+            }
+
             // 结束当前录音会话
             isNewRecordingSession = false;
             recordingSessionId = null;
@@ -3774,8 +3830,8 @@
             console.error('发送停止录音命令失败:', error);
             buttonTriggeredStop = false;  // 确保重置标志
           }
-            }
         }
+      }
     }
 
     // 初始化
@@ -3791,7 +3847,7 @@
           console.warn("停止旧识别器时出错:", e);
         }
       }
-      
+
       // 初始化新的识别器
       if (!bleRecognizer) {
         bleRecognizer = initBLERecognizer();
@@ -3800,19 +3856,19 @@
           return;
         }
       }
-      
+
       // 添加一个延迟启动，确保连接有时间建立
       setTimeout(() => {
         try {
           // 启动连续识别
           console.log("启动语音识别...");
-          
+
           // 添加启动超时保护
           let startSuccess = false;
           const startTimeoutId = setTimeout(() => {
             if (!startSuccess) {
               console.error("启动语音识别超时，尝试重建识别器");
-              
+
               // 清理旧的识别器
               try {
                 if (bleRecognizer) {
@@ -3823,7 +3879,7 @@
               } catch (e) {
                 console.warn("清理超时识别器时出错:", e);
               }
-              
+
               // 重新初始化并启动
               bleRecognizer = initBLERecognizer();
               if (bleRecognizer) {
@@ -3844,7 +3900,7 @@
               }
             }
           }, 8000); // 8秒超时
-          
+
           // 启动连续识别
           bleRecognizer.startContinuousRecognitionAsync(
             () => {
@@ -3855,15 +3911,15 @@
             (err) => {
               console.error("Azure识别器启动失败:", err);
               clearTimeout(startTimeoutId);
-              
+
               // 尝试重新初始化并重启
               setTimeout(() => {
                 if (bleRecognizer) {
                   try {
                     bleRecognizer.close();
-                  } catch (e) {}
+                  } catch (e) { }
                 }
-                
+
                 bleRecognizer = initBLERecognizer();
                 if (bleRecognizer) {
                   setTimeout(() => {
@@ -3888,25 +3944,25 @@
       // 查找所有 "wss://" 开头的连接
       const wsConns = Object.keys(window).filter(key => {
         try {
-          return window[key] && 
-                 typeof window[key] === 'object' && 
-                 window[key].url && 
-                 typeof window[key].url === 'string' && 
-                 window[key].url.startsWith('wss://');
+          return window[key] &&
+            typeof window[key] === 'object' &&
+            window[key].url &&
+            typeof window[key].url === 'string' &&
+            window[key].url.startsWith('wss://');
         } catch (e) {
           return false;
         }
       }).map(key => window[key]);
-      
+
       // 输出连接状态
       if (wsConns.length > 0) {
         console.log(`找到 ${wsConns.length} 个WebSocket连接:`);
         wsConns.forEach((ws, i) => {
-          console.log(`WebSocket ${i+1}: ${ws.url}, 状态: ${ws.readyState}`);
-          
+          console.log(`WebSocket ${i + 1}: ${ws.url}, 状态: ${ws.readyState}`);
+
           // 添加连接异常处理
           if (ws.readyState === WebSocket.CLOSING || ws.readyState === WebSocket.CLOSED) {
-            console.warn(`WebSocket连接 ${i+1} 已关闭或正在关闭`);
+            console.warn(`WebSocket连接 ${i + 1} 已关闭或正在关闭`);
           }
         });
       } else {
@@ -3929,30 +3985,30 @@
           console.warn("无法使用CDP清理WebSocket:", e);
         }
       }
-      
+
       // 尝试关闭所有具有close方法的对象
       const wsConns = Object.keys(window).filter(key => {
         try {
-          return window[key] && 
-                 typeof window[key] === 'object' && 
-                 window[key].close && 
-                 typeof window[key].close === 'function' &&
-                 window[key].url && 
-                 typeof window[key].url === 'string' && 
-                 window[key].url.startsWith('wss://');
+          return window[key] &&
+            typeof window[key] === 'object' &&
+            window[key].close &&
+            typeof window[key].close === 'function' &&
+            window[key].url &&
+            typeof window[key].url === 'string' &&
+            window[key].url.startsWith('wss://');
         } catch (e) {
           return false;
         }
       }).map(key => window[key]);
-      
+
       if (wsConns.length > 0) {
         console.log(`强制关闭 ${wsConns.length} 个WebSocket连接`);
         wsConns.forEach((ws, i) => {
           try {
             ws.close();
-            console.log(`已强制关闭WebSocket ${i+1}`);
+            console.log(`已强制关闭WebSocket ${i + 1}`);
           } catch (e) {
-            console.warn(`强制关闭WebSocket ${i+1} 失败:`, e);
+            console.warn(`强制关闭WebSocket ${i + 1} 失败:`, e);
           }
         });
       }
@@ -3961,12 +4017,12 @@
     // 确保页面关闭时清理所有连接
     window.addEventListener('beforeunload', () => {
       forceCleanupWebSockets();
-      
+
       if (bleRecognizer) {
         try {
           bleRecognizer.stopContinuousRecognitionAsync();
           bleRecognizer.close();
-        } catch (e) {}
+        } catch (e) { }
       }
     });
 
@@ -3980,4 +4036,5 @@
     }
   </script>
 </body>
+
 </html>
