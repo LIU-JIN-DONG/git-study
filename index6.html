@@ -2789,6 +2789,30 @@
 
         // 请求用户选择蓝牙设备
         bluetoothDevices[micIndex] = await navigator.bluetooth.requestDevice(deviceOptions);
+
+        // 🆕 检测重复连接
+        const currentDeviceId = bluetoothDevices[micIndex].id;
+        const currentDeviceName = bluetoothDevices[micIndex].name;
+
+        // 检查其他索引是否已连接相同设备
+        for (let i = 0; i < bluetoothDevices.length; i++) {
+          if (i !== micIndex && bluetoothDevices[i] && bluetoothDevices[i].id === currentDeviceId) {
+            alert("检测到重复连接，请重新选择设备");
+            console.warn(`⚠️ 检测到重复连接: 设备 "${currentDeviceName}" (ID: ${currentDeviceId}) 已连接到麦克风${i + 1}`);
+
+            // 清除当前连接尝试，保持原有设备不变
+            bluetoothDevices[micIndex] = null;
+
+            // 更新UI状态为未连接
+            const micBtn = micIndex === 0 ? gmicMicBtn : gmicMicBtn2;
+            micBtn.classList.remove('connecting', 'connected');
+            micBtn.innerHTML = `<i class="fas fa-bluetooth"></i> GMIC-MIC0${micIndex + 1}`;
+
+            return; // 退出连接流程
+          }
+        }
+
+
         console.log(`[调试] 设备信息:`, {
           name: bluetoothDevices[micIndex].name,
           id: bluetoothDevices[micIndex].id,
