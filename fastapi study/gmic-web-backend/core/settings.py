@@ -1,0 +1,22 @@
+TORTOISE_ORM={
+    "connections":{
+        "default":{
+            "engine":"tortoise.backends.mysql",
+            "credentials":{
+                "host":"127.0.0.1",
+                "port":3306,
+                "user":"root",
+                "password":"",
+                "database":"translate",
+                "charset":"utf8mb4",
+                "init_command":"SET time_zone = '+08:00'"
+            }
+        }
+    },
+    "apps":{
+        "models":{
+            "models":["models.translate","models.todo"],
+            "default_connection":"default",
+        }
+    }
+}
