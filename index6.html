@@ -35,20 +35,24 @@
     header {
       background: #4c6ef5;
       color: #fff;
-      padding: 15px;
+      padding: 10px;
+      /* 减少内边距 */
       text-align: center;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
+      /* 稍微减小字体 */
       font-weight: bold;
     }
 
     /* 主容器 */
     .container {
       width: 95%;
-      margin: 20px auto;
+      margin: 10px auto;
+      /* 减少上下外边距 */
       background: #fff;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      padding: 20px;
+      padding: 15px;
+      /* 减少内边距 */
     }
 
     /* 语言设置与状态区域 */
@@ -56,8 +60,10 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 20px;
+      gap: 8px;
+      /* 减少间距 */
+      margin-bottom: 12px;
+      /* 减少下边距 */
     }
 
     .settings-row label {
@@ -101,22 +107,28 @@
     /* 文本框并排布局 */
     .text-columns {
       display: flex;
-      gap: 26px;
-      margin-bottom: 20px;
+      gap: 15px;
+      /* 减少列间距 */
+      margin-bottom: 12px;
+      /* 减少底部边距 */
     }
 
     .column {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
+      /* 减少垂直间距 */
     }
 
     /* 文本域高度、字体 */
     .column textarea {
       width: 100%;
       flex: 1;
-      min-height: 800px;
+      min-height: 500px;
+      /* 减小高度从800px到300px */
+      height: 300px;
+      /* 固定高度 */
       padding: 8px;
       font-size: 1.4rem;
       line-height: 1.2;
@@ -129,14 +141,19 @@
     /* 按钮区：发送、录音 */
     .btn-row {
       display: flex;
-      gap: 10px;
+      gap: 8px;
+      /* 减少按钮间距 */
       flex-wrap: wrap;
+      margin-bottom: 8px;
+      /* 添加底部边距 */
     }
 
     .btn-send,
     .btn-record {
-      padding: 8px 16px;
-      font-size: 1rem;
+      padding: 6px 12px;
+      /* 减小按钮内边距 */
+      font-size: 0.95rem;
+      /* 稍微减小字体 */
       cursor: pointer;
       border-radius: 4px;
       border: none;
@@ -170,26 +187,34 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 8px;
+      margin-bottom: 5px;
+      /* 减少底部边距 */
+      margin-top: 5px;
+      /* 添加顶部边距 */
     }
 
     .log-title {
-      font-size: 1rem;
+      font-size: 0.9rem;
+      /* 减小字体 */
       font-weight: bold;
       color: #333;
-      border-left: 4px solid #4c6ef5;
-      padding-left: 8px;
+      border-left: 3px solid #4c6ef5;
+      /* 减小边框 */
+      padding-left: 6px;
+      /* 减小内边距 */
     }
 
     .log-toggle-btn {
-      padding: 6px 12px;
+      padding: 4px 10px;
+      /* 减小内边距 */
       border: none;
       border-radius: 4px;
       background-color: #adb5bd;
       color: #fff;
       cursor: pointer;
       transition: background-color 0.2s ease;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
+      /* 减小字体 */
     }
 
     .log-toggle-btn:hover {
@@ -3048,15 +3073,18 @@
 
         buttonCharacteristic.addEventListener('characteristicvaluechanged', async (event) => {
           const value = new Uint8Array(event.target.value.buffer);
+          const buttonValue = value.length > 0 ? value[0] : -1;
           console.log(`[按钮信号] 收到信号:`, {
             数据: Array.from(value).map(b => '0x' + b.toString(16).padStart(2, '0')).join(' '),
+            按钮值: buttonValue,
             信号次数: isFirstSignal ? '第一次' : '第二次',
             时间戳: new Date().toISOString()
           });
 
-          if (isFirstSignal) {
-            // 第一次信号 - 开始录音
-            console.log('[按钮事件] 收到第一次信号，开始录音');
+          // 基于按钮值判断操作，而不是基于信号顺序
+          if (buttonValue === 1) {
+            // 按钮值为1 - 开始录音
+            console.log('[按钮事件] 收到开始录音信号 (值=1)');
             if (!isBluetoothRecording) {
               // 停止当前TTS播放
               stopCurrentTTS();
@@ -3078,9 +3106,9 @@
               // 开始录音
               startBluetoothRecording();
             }
-          } else {
-            // 第二次信号 - 停止录音
-            console.log('[按钮事件] 收到第二次信号，停止录音');
+          } else if (buttonValue === 0) {
+            // 按钮值为0 - 停止录音
+            console.log('[按钮事件] 收到停止录音信号 (值=0)');
             if (isBluetoothRecording && activeMicIndex === micIndex) {
               // 设置按钮触发标志，防止超时检查
               buttonTriggeredStop = true;
@@ -3143,10 +3171,12 @@
               recordingSessionId = null;
               buttonTriggeredStop = false;
             }
+          } else {
+            console.log(`[按钮事件] 收到未知按钮值: ${buttonValue}，忽略`);
           }
 
-          // 切换信号标志
-          isFirstSignal = !isFirstSignal;
+          // 注意：不再基于信号顺序切换，而是基于实际按钮值
+          // isFirstSignal = !isFirstSignal;
         });
 
         console.log(`按钮信号通知已启动 (Mic ${micIndex + 1})`);
