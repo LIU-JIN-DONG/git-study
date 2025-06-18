@@ -525,11 +525,13 @@
     // ============= Replace with your own keys (NOT safe for production) ============
 
     // OpenAI (Whisper + GPT)
+    const OPENAI_API_KEY = "xxxx";
     const OPENAI_WHISPER_URL = "https://api.openai.com/v1/audio/transcriptions";
     const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
     const OPENAI_TTS_URL = "https://api.openai.com/v1/audio/speech"; // OpenAI TTS API
 
     // Azure TTS
+    const AZURE_TTS_KEY = "xxxx";
     const AZURE_TTS_ENDPOINT = "https://westus.tts.speech.microsoft.com/cognitiveservices/v1";
 
     // Azure STT (语音转写)
@@ -2812,7 +2814,6 @@
           }
         }
 
-
         console.log(`[调试] 设备信息:`, {
           name: bluetoothDevices[micIndex].name,
           id: bluetoothDevices[micIndex].id,
@@ -2952,6 +2953,9 @@
             // 如果特征值支持通知，尝试监听
             if (char.properties.notify) {
               try {
+                // 添加延迟，防止GATT操作过快导致失败
+                await new Promise(resolve => setTimeout(resolve, 300));
+
                 await char.startNotifications();
                 char.addEventListener('characteristicvaluechanged', async (event) => {
                   const value = new Uint8Array(event.target.value.buffer);
@@ -2964,6 +2968,7 @@
                 console.log(`[特征值] UUID ${char.uuid} 通知已启动`);
               } catch (e) {
                 console.log(`[特征值通知启动失败] UUID ${char.uuid}:`, e);
+                // 继续执行，不中断整个流程
               }
             }
           }
@@ -2995,8 +3000,17 @@
         voiceDataCharacteristics[micIndex].addEventListener('characteristicvaluechanged', onVoiceDataChanged);
         console.log("已添加语音数据监听器");
 
-        // 启动通知前先等待一小段时间
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // 启动通知前先等待一小段时间，增加延迟以提高成功率
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        try {
+          // 启动语音数据通知
+          await voiceDataCharacteristics[micIndex].startNotifications();
+          console.log(`语音数据通知已启动 (Mic ${micIndex + 1})`);
+        } catch (e) {
+          console.warn(`语音数据通知启动警告: ${e}, 继续执行...`);
+          // 继续执行，不中断连接流程
+        }
 
         // 设置按钮控制特征值
         console.log(`尝试查找按钮特征值 (Mic ${micIndex + 1}): ${buttonCharacteristicUUID}`);
@@ -3006,9 +3020,19 @@
           properties: buttonCharacteristic.properties
         });
 
+        // 启动按钮通知前先等待一小段时间
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         // 启动按钮通知
         let isFirstSignal = true;  // 用于跟踪是第一个还是第二个信号
-        await buttonCharacteristic.startNotifications();
+        try {
+          await buttonCharacteristic.startNotifications();
+          console.log(`按钮通知已成功启动 (Mic ${micIndex + 1})`);
+        } catch (e) {
+          console.warn(`按钮通知启动警告: ${e}, 继续执行...`);
+          // 继续执行，不中断连接流程
+        }
+
         buttonCharacteristic.addEventListener('characteristicvaluechanged', async (event) => {
           const value = new Uint8Array(event.target.value.buffer);
           console.log(`[按钮信号] 收到信号:`, {
@@ -3066,6 +3090,12 @@
               // 先设置状态防止其他处理
               isBluetoothRecording = false;
 
+              // 立即更新UI状态，防止用户混淆
+              const micBtn = activeMicIndex === 0 ? gmicMicBtn : gmicMicBtn2;
+              micBtn.classList.remove('recording');
+              micBtn.classList.add('waiting');
+              micBtn.innerHTML = `<i class="fas fa-cog fa-spin"></i> 处理中...`;
+
               // 停止Azure识别器
               if (bleRecognizer) {
                 try {
@@ -3080,20 +3110,19 @@
                 isProcessingData = true;
                 processingStartTime = Date.now();
 
-                // 更新UI为处理中状态
-                const micBtn = activeMicIndex === 0 ? gmicMicBtn : gmicMicBtn2;
-                micBtn.innerHTML = '<i class="fas fa-cog fa-spin"></i> 处理中...';
-
                 try {
                   await processPcmData(true);
 
                   // 处理完成后，确保UI更新为就绪状态
-                  micBtn.classList.remove('recording');
-                  micBtn.classList.add('waiting');
                   micBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC ${micIndex + 1} Ready`;
                 } catch (error) {
                   console.error('处理录音数据时出错:', error);
+                  // 即使处理失败，也要确保UI恢复正常
+                  micBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC ${micIndex + 1} Ready`;
                 }
+              } else {
+                // 即使没有足够数据处理，也要确保UI恢复正常
+                micBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC ${micIndex + 1} Ready`;
               }
 
               // 结束当前录音会话
@@ -3807,6 +3836,12 @@
             // 先设置状态防止其他处理
             isBluetoothRecording = false;
 
+            // 立即更新UI状态，防止用户混淆
+            const micBtn = activeMicIndex === 0 ? gmicMicBtn : gmicMicBtn2;
+            micBtn.classList.remove('recording');
+            micBtn.classList.add('waiting');
+            micBtn.innerHTML = `<i class="fas fa-cog fa-spin"></i> 处理中...`;
+
             // 停止Azure识别器
             if (bleRecognizer) {
               try {
@@ -3821,28 +3856,18 @@
               isProcessingData = true;
               processingStartTime = Date.now();
 
-              // 更新UI为处理中状态
-              const micBtn = activeMicIndex === 0 ? gmicMicBtn : gmicMicBtn2;
-              micBtn.innerHTML = '<i class="fas fa-cog fa-spin"></i> 处理中...';
-
               try {
                 await processPcmData(true);
 
                 // 处理完成后，确保UI更新为就绪状态
-                micBtn.classList.remove('recording');
-                micBtn.classList.add('waiting');
                 micBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC ${micIndex + 1} Ready`;
               } catch (error) {
                 console.error('处理录音数据时出错:', error);
+                // 即使处理失败，也要确保UI恢复正常
+                micBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC ${micIndex + 1} Ready`;
               }
             } else {
-              // 数据太少，重置状态但不清空input
-              resetRecordingState(false);
-
-              // 更新UI状态
-              const micBtn = activeMicIndex === 0 ? gmicMicBtn : gmicMicBtn2;
-              micBtn.classList.remove('recording');
-              micBtn.classList.add('waiting');
+              // 即使没有足够数据处理，也要确保UI恢复正常
               micBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC ${micIndex + 1} Ready`;
             }
 
