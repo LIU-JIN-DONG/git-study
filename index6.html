@@ -126,7 +126,7 @@
       width: 100%;
       flex: 1;
       min-height: 500px;
-      /* 减小高度从800px到300px */
+      /* 减小高度从800px到500px */
       height: 300px;
       /* 固定高度 */
       padding: 8px;
@@ -420,6 +420,46 @@
         min-height: 300px;
       }
     }
+
+    /* 全屏模式样式 */
+    body.fullscreen-mode header,
+    body.fullscreen-mode #audioPlayer,
+    body.fullscreen-mode .log-container,
+    body.fullscreen-mode .btn-record {
+      display: none !important;
+    }
+
+    body.fullscreen-mode .settings-row {
+      margin-bottom: 5px;
+    }
+
+    body.fullscreen-mode .container {
+      padding: 10px;
+      margin: 0;
+      width: 100%;
+      height: 100vh;
+      border-radius: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    body.fullscreen-mode .text-columns {
+      flex: 1;
+      margin-bottom: 5px;
+    }
+
+    body.fullscreen-mode .column textarea {
+      min-height: 0;
+      height: 100%;
+    }
+
+    body.fullscreen-mode #fullScreenBtn {
+      background-color: #fa5252;
+    }
+
+    body.fullscreen-mode #fullScreenBtn:hover {
+      background-color: #ff8787;
+    }
   </style>
 </head>
 
@@ -480,6 +520,7 @@
         ML: <span id="spanMainLang">unset</span> |
         TL: <span id="spanTargetLang">unset</span>
       </div>
+      <button id="fullScreenBtn" class="log-toggle-btn" style="margin-left: auto;">Full Screen</button>
     </div>
 
     <!-- 左右文本框 -->
@@ -4240,6 +4281,37 @@
       const seconds = String(now.getSeconds()).padStart(2, '0');
       return `[${hours}:${minutes}:${seconds}]`;
     }
+
+    /*************************************************************
+     * 11. 全屏模式功能
+     *************************************************************/
+    const fullScreenBtn = document.getElementById("fullScreenBtn");
+    let isFullScreenMode = false;
+
+    fullScreenBtn.addEventListener("click", () => {
+      const body = document.body;
+
+      if (!isFullScreenMode) {
+        // 进入全屏模式
+        body.classList.add("fullscreen-mode");
+        fullScreenBtn.textContent = "Exit Full Screen";
+        isFullScreenMode = true;
+      } else {
+        // 退出全屏模式
+        body.classList.remove("fullscreen-mode");
+        fullScreenBtn.textContent = "Full Screen";
+        isFullScreenMode = false;
+      }
+    });
+
+    // 也支持ESC键退出全屏
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && isFullScreenMode) {
+        document.body.classList.remove("fullscreen-mode");
+        fullScreenBtn.textContent = "Full Screen";
+        isFullScreenMode = false;
+      }
+    });
   </script>
 </body>
 
