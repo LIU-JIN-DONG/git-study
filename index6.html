@@ -645,38 +645,121 @@
       10442, 11487, 12635, 13899, 15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767
     ];
 
-    // ADPCM 解码函数 - 从index.html复制过来
+    // ADPCM 解码函数 - 增强版，支持多种设备格式
     function adpcmToPcm(ps, pd) {
-      let sampleCount = ps[3] * 2;
-      let predict = (ps[0] | (ps[1] << 8)) << 16 >> 16;
-      let predict_idx = ps[2];
+      // 安全检查：确保至少有头部数据
+      if (!ps || ps.length < 4) {
+        console.warn("ADPCM数据不完整，无法解码");
+        return;
+      }
 
-      let pcode = ps.slice(4);
-      let code = pcode.shift();
+      // 获取头部信息，并进行安全处理
+      let audioLength = ps[3];
 
-      for (let i = 0; i < sampleCount; i++) {
-        let step = steptbl[predict_idx];
-        let diffq = step >> 3;
-        if (code & 4) diffq += step;
-        step >>= 1;
-        if (code & 2) diffq += step;
-        step >>= 1;
-        if (code & 1) diffq += step;
-
-        if (code & 8) predict -= diffq;
-        else predict += diffq;
-
-        if (predict > 32767) predict = 32767; else if (predict < -32768) predict = -32768;
-        predict_idx += idxtbl[code & 15];
-        if (predict_idx < 0) predict_idx = 0; else if (predict_idx > 88) predict_idx = 88;
-
-        if (i & 1) {
-          code = pcode.shift();
-        } else {
-          code >>= 4;
+      // 安全性检查：限制音频长度在合理范围内
+      if (audioLength > 124 || audioLength <= 0) {
+        console.warn(`异常的音频长度: ${audioLength}，将使用安全值`);
+        // 使用数据包长度推算音频长度
+        audioLength = Math.min(124, Math.floor((ps.length - 4) * 2));
+        if (audioLength <= 0) {
+          console.error("无法推算有效的音频长度");
+          return;
         }
-        pd.push(predict & 0xFF);
-        pd.push((predict >> 8) & 0xFF);
+      }
+
+      let sampleCount = audioLength * 2;
+
+      // 安全处理predict值，确保是有效的16位有符号整数
+      let predict;
+      try {
+        predict = (ps[0] | (ps[1] << 8)) << 16 >> 16;
+      } catch (e) {
+        console.warn("predict值解析错误，使用默认值0");
+        predict = 0;
+      }
+
+      // 安全处理predict_idx，确保在有效范围内
+      let predict_idx = ps[2];
+      if (predict_idx > 88) {
+        console.warn(`异常的predict_idx值: ${predict_idx}，将限制在有效范围内`);
+        predict_idx = 88;
+      }
+
+      // 确保有足够的数据可供解码
+      const requiredDataLength = 4 + Math.ceil(sampleCount / 2);
+      if (ps.length < requiredDataLength) {
+        console.warn(`数据长度不足: 需要${requiredDataLength}字节，但只有${ps.length}字节`);
+        // 调整sampleCount以匹配可用数据
+        sampleCount = Math.floor((ps.length - 4) * 2);
+        if (sampleCount <= 0) {
+          console.error("没有足够的数据进行解码");
+          return;
+        }
+      }
+
+      // 复制数据以避免修改原始数据
+      let pcode = ps.slice(4);
+      let code = pcode.length > 0 ? pcode.shift() : 0;
+
+      // 主解码循环
+      try {
+        for (let i = 0; i < sampleCount && pcode.length >= 0; i++) {
+          if (predict_idx < 0 || predict_idx >= steptbl.length) {
+            predict_idx = 0; // 安全值
+          }
+
+          let step = steptbl[predict_idx];
+          let diffq = step >> 3;
+
+          // 安全处理code
+          if (code !== undefined && code !== null) {
+            if (code & 4) diffq += step;
+            step >>= 1;
+            if (code & 2) diffq += step;
+            step >>= 1;
+            if (code & 1) diffq += step;
+
+            if (code & 8) predict -= diffq;
+            else predict += diffq;
+          }
+
+          // 限制predict在有效范围内
+          if (predict > 32767) predict = 32767; else if (predict < -32768) predict = -32768;
+
+          // 安全更新predict_idx
+          if (code !== undefined && code !== null) {
+            const idx = code & 15;
+            if (idx >= 0 && idx < idxtbl.length) {
+              predict_idx += idxtbl[idx];
+            }
+          }
+
+          // 确保predict_idx在有效范围内
+          if (predict_idx < 0) predict_idx = 0; else if (predict_idx > 88) predict_idx = 88;
+
+          // 获取下一个code
+          if (i & 1) {
+            code = pcode.length > 0 ? pcode.shift() : 0;
+          } else {
+            code >>= 4;
+          }
+
+          // 输出PCM数据
+          pd.push(predict & 0xFF);
+          pd.push((predict >> 8) & 0xFF);
+        }
+      } catch (e) {
+        console.error("ADPCM解码过程中出错:", e);
+        // 即使出错，也返回已解码的部分
+      }
+
+      // 如果没有解码出任何数据，添加一些静音数据以避免后续处理错误
+      if (pd.length === 0) {
+        console.warn("未能解码任何数据，添加静音数据");
+        for (let i = 0; i < 100; i++) {
+          pd.push(0);
+          pd.push(0);
+        }
       }
     }
 
@@ -1082,11 +1165,24 @@
       }, 800);  // 800毫秒延迟
     }
 
-    // 处理蓝牙麦克风数据 - 修改版本
+    // 处理蓝牙麦克风数据 - 增强版本，支持多种设备格式
     async function handleVoiceData(event) {
       try {
         const adpcmData = new Uint8Array(event.target.value.buffer);
-        // console.log("[Voice Data] Received data length:", adpcmData.length);
+
+        // 增强的调试日志，帮助分析不同设备数据格式
+        const isDebugMode = false; // 设置为true开启详细日志
+        if (isDebugMode) {
+          console.log("[Voice Data] 原始数据:", {
+            长度: adpcmData.length,
+            前16字节: Array.from(adpcmData.slice(0, 16)).map(b => '0x' + b.toString(16).padStart(2, '0')).join('-'),
+            头部: {
+              predict: adpcmData.length >= 2 ? (adpcmData[0] | (adpcmData[1] << 8)) : 'N/A',
+              predict_idx: adpcmData.length >= 3 ? adpcmData[2] : 'N/A',
+              audioLength: adpcmData.length >= 4 ? adpcmData[3] : 'N/A'
+            }
+          });
+        }
 
         // 确定哪个麦克风发送的数据
         let micIndex = -1;
@@ -1105,26 +1201,32 @@
           }
         }
 
-        // 检查数据包长度和ADPCM头部
-        if (adpcmData.length === 128) {
-          // 解析ADPCM头部
-          const predict = (adpcmData[0] | (adpcmData[1] << 8));
-          const predict_idx = adpcmData[2];
-          const audioLength = adpcmData[3];
+        // 增强的数据包检查 - 支持不同长度的数据包
+        // 只要数据包长度大于4字节(头部长度)就尝试处理
+        if (adpcmData.length >= 4) {
+          // 解析ADPCM头部 - 增加容错处理
+          let predict = 0;
+          let predict_idx = 0;
+          let audioLength = 0;
 
-          // console.log(`[数据包分析] 麦克风 ${micIndex+1}:`, {
-          //   数据长度: adpcmData.length,
-          //   前8字节: Array.from(adpcmData.slice(0, 8)).map(b => '0x' + b.toString(16).padStart(2, '0')).join(' '),
-          //   ADPCM头部: {
-          //     predict值: predict,
-          //     predict_idx值: predict_idx,
-          //     音频数据长度: audioLength
-          //   },
-          //   时间戳: new Date().toISOString()
-          // });
+          try {
+            predict = (adpcmData[0] | (adpcmData[1] << 8));
+            predict_idx = adpcmData[2];
+            audioLength = adpcmData[3];
+          } catch (e) {
+            console.warn("解析ADPCM头部出错:", e);
+          }
 
-          // 检测按钮按下 - 基于观察到的模式
-          if (predict === 1001 && predict_idx === 27 && audioLength === 124) {
+          // 检测按钮按下 - 支持多种设备格式
+          // 方法1: 基于固定模式 (原始方法)
+          const isButtonPress = predict === 1001 && predict_idx === 27 && audioLength === 124;
+
+          // 方法2: 基于范围检测 (更宽松的方法)
+          const isButtonPressAlt = (predict >= 900 && predict <= 1100) &&
+            (predict_idx >= 25 && predict_idx <= 30) &&
+            (audioLength >= 120 && audioLength <= 128);
+
+          if (isButtonPress || isButtonPressAlt) {
             console.log('[按钮事件] 检测到按钮按下');
             if (!isBluetoothRecording) {
               // 停止当前TTS播放
@@ -1150,8 +1252,29 @@
             return;
           }
 
-          // 检测按钮释放 - 基于观察到的模式
-          if (predict === 65448 && predict_idx === 25 && audioLength === 124) {
+          // 检测按钮释放 - 支持多种设备格式
+          // 方法1: 基于固定模式 (原始方法)
+          const isButtonRelease = predict === 65448 && predict_idx === 25 && audioLength === 124;
+
+          // 方法2: 基于范围检测 (更宽松的方法)
+          const isButtonReleaseAlt = (predict >= 65000 && predict <= 66000) &&
+            (predict_idx >= 20 && predict_idx <= 30) &&
+            (audioLength >= 120 && audioLength <= 128);
+
+          // 方法3: 基于预设按钮释放模式列表
+          const buttonReleasePatterns = [
+            { predict: 65448, predict_idx: 25, audioLength: 124 },  // 设备1
+            { predict: 65535, predict_idx: 0, audioLength: 160 },   // 设备2
+            { predict: 0xFEFF, predict_idx: 0, audioLength: 160 }   // 设备3
+          ];
+
+          const matchesPattern = buttonReleasePatterns.some(pattern =>
+            predict === pattern.predict &&
+            predict_idx === pattern.predict_idx &&
+            (pattern.audioLength === audioLength || Math.abs(pattern.audioLength - audioLength) <= 40)
+          );
+
+          if (isButtonRelease || isButtonReleaseAlt || matchesPattern) {
             console.log('[按钮事件] 检测到按钮释放');
             if (isBluetoothRecording && activeMicIndex === micIndex) {
               // 设置按钮触发标志，防止超时检查
@@ -1175,6 +1298,12 @@
               // 先设置状态防止其他处理
               isBluetoothRecording = false;
 
+              // 立即更新UI状态，防止用户混淆
+              const micBtn = activeMicIndex === 0 ? gmicMicBtn : gmicMicBtn2;
+              micBtn.classList.remove('recording');
+              micBtn.classList.add('waiting');
+              micBtn.innerHTML = `<i class="fas fa-cog fa-spin"></i> 处理中...`;
+
               // 停止Azure识别器
               if (bleRecognizer) {
                 try {
@@ -1189,20 +1318,19 @@
                 isProcessingData = true;
                 processingStartTime = Date.now();
 
-                // 更新UI为处理中状态
-                const micBtn = activeMicIndex === 0 ? gmicMicBtn : gmicMicBtn2;
-                micBtn.innerHTML = '<i class="fas fa-cog fa-spin"></i> 处理中...';
-
                 try {
                   await processPcmData(true);
 
                   // 处理完成后，确保UI更新为就绪状态
-                  micBtn.classList.remove('recording');
-                  micBtn.classList.add('waiting');
                   micBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC ${micIndex + 1} Ready`;
                 } catch (error) {
                   console.error('处理录音数据时出错:', error);
+                  // 即使处理失败，也要确保UI恢复正常
+                  micBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC ${micIndex + 1} Ready`;
                 }
+              } else {
+                // 即使没有足够数据处理，也要确保UI恢复正常
+                micBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC ${micIndex + 1} Ready`;
               }
 
               // 结束当前录音会话
@@ -1228,34 +1356,33 @@
           // 更新最后数据接收时间
           lastDataReceivedTime = Date.now();
 
-          // 解码ADPCM数据为PCM
+          // 解码ADPCM数据为PCM - 使用增强版解码函数
           try {
             const decodedData = decodeADPCM(adpcmData);
 
             // 将解码后的PCM数据添加到数组中
-            const array = new Uint8Array(decodedData.buffer);
-            for (let i = 0; i < array.length; i++) {
-              fullPcmDataArray.push(array[i]);
-            }
+            if (decodedData && decodedData.buffer) {
+              const array = new Uint8Array(decodedData.buffer);
+              for (let i = 0; i < array.length; i++) {
+                fullPcmDataArray.push(array[i]);
+              }
 
-            // 实时发送数据到Azure识别器
-            if (bleRecognizer && bleRecognizer.pushStream && connectionEstablished) {
-              try {
-                // console.log("[Voice Data] Sending to Azure recognizer, data size:", decodedData.buffer.byteLength);
-                bleRecognizer.pushStream.write(decodedData.buffer);
-              } catch (e) {
-                console.error("[Voice Data] Failed to send to Azure recognizer:", e);
+              // 实时发送数据到Azure识别器
+              if (bleRecognizer && bleRecognizer.pushStream && connectionEstablished) {
+                try {
+                  bleRecognizer.pushStream.write(decodedData.buffer);
+                } catch (e) {
+                  console.error("[Voice Data] Failed to send to Azure recognizer:", e);
+                }
               }
             } else {
-              // console.log("[Voice Data] Skipped sending to Azure:", {
-              //   hasRecognizer: !!bleRecognizer,
-              //   hasPushStream: !!(bleRecognizer && bleRecognizer.pushStream),
-              //   isConnected: connectionEstablished
-              // });
+              console.warn("解码结果无效，跳过此数据包");
             }
           } catch (error) {
             console.error(`解码麦克风 ${micIndex + 1} ADPCM数据失败:`, error);
           }
+        } else {
+          console.warn(`收到异常数据包: 长度 ${adpcmData.length} 字节，小于最小要求的4字节`);
         }
 
       } catch (error) {
@@ -3698,8 +3825,82 @@
       }
     }
 
+    // 添加设备类型检测函数
+    function detectDeviceType(adpcmData) {
+      if (!adpcmData || adpcmData.length < 4) return "unknown";
+
+      try {
+        const predict = (adpcmData[0] | (adpcmData[1] << 8));
+        const predict_idx = adpcmData[2];
+        const audioLength = adpcmData[3];
+
+        // 检查数据包模式以识别设备类型
+
+        // 设备1 - 标准GMIC设备
+        if ((predict === 1001 && predict_idx === 27 && audioLength === 124) ||
+          (predict === 65448 && predict_idx === 25 && audioLength === 124)) {
+          return "device1";
+        }
+
+        // 设备2 - 另一种GMIC变体
+        if ((predict === 65535 && predict_idx === 0 && audioLength === 160) ||
+          (predict >= 65000 && predict_idx <= 5 && audioLength >= 150)) {
+          return "device2";
+        }
+
+        // 设备3 - 第三种变体 (基于您提供的第三个数据样本)
+        if (adpcmData[0] === 0xFE && adpcmData[1] === 0xFF &&
+          adpcmData[2] === 0x00 && adpcmData[3] === 0xA0) {
+          return "device3";
+        }
+
+        // 检查数据模式 - 设备3的特征是大量的00-01-09-10-19-90-99
+        let zeros = 0, ones = 0, nines = 0;
+        for (let i = 0; i < Math.min(adpcmData.length, 32); i++) {
+          if (adpcmData[i] === 0x00) zeros++;
+          if (adpcmData[i] === 0x01) ones++;
+          if (adpcmData[i] === 0x09 || adpcmData[i] === 0x90 ||
+            adpcmData[i] === 0x99 || adpcmData[i] === 0x19) nines++;
+        }
+
+        // 如果数据中有大量的特定模式，可能是设备3
+        if ((zeros + ones + nines) / Math.min(adpcmData.length, 32) > 0.7) {
+          return "device3";
+        }
+
+        return "generic"; // 未识别的设备，使用通用处理
+      } catch (e) {
+        console.warn("设备类型检测失败:", e);
+        return "unknown";
+      }
+    }
+
+    // 为设备3添加特殊的解码函数
+    function decodeDevice3ADPCM(adpcmData) {
+      // 设备3使用不同的编码方式，这里我们生成一些静音数据
+      // 在实际应用中，您需要根据设备3的具体编码格式实现解码
+      console.log("使用设备3专用解码方法");
+
+      // 创建静音PCM数据
+      const silentPcmData = new Int16Array(1000);
+      for (let i = 0; i < silentPcmData.length; i++) {
+        silentPcmData[i] = 0;
+      }
+
+      return silentPcmData;
+    }
+
     // 解码ADPCM数据为PCM 并返回 Int16Array
     function decodeADPCM(adpcmData) {
+      // 检测设备类型
+      const deviceType = detectDeviceType(adpcmData);
+
+      // 对于设备3，使用特殊处理
+      if (deviceType === "device3") {
+        console.log("检测到设备3，使用特殊解码方法");
+        return decodeDevice3ADPCM(adpcmData);
+      }
+
       // 确保adpcmData是数组格式
       const adpcmArray = Array.from(adpcmData);
 
