@@ -219,6 +219,26 @@
       cursor: not-allowed;
     }
 
+    .clean-memory-btn {
+      padding: 6px 12px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      border-radius: 4px;
+      border: none;
+      background-color: #fa5252;
+      color: #fff;
+      transition: background-color 0.2s ease;
+    }
+
+    .clean-memory-btn:hover {
+      background-color: #e03131;
+    }
+
+    .clean-memory-btn:disabled {
+      background-color: #adb5bd;
+      cursor: not-allowed;
+    }
+
     .log-title {
       font-size: 0.9rem;
       /* 减小字体 */
@@ -748,6 +768,7 @@
         <div class="log-title">Translation History (Newest First)</div>
         <div class="log-controls">
           <button class="summarize-btn" id="summarizeBtn">Summarize</button>
+          <button class="clean-memory-btn" id="cleanMemoryBtn">Clean Memory</button>
           <button class="log-toggle-btn" id="toggleLogBtn">Show Log</button>
         </div>
       </div>
@@ -4832,6 +4853,61 @@
 
     // 绑定Summarize按钮事件
     document.getElementById('summarizeBtn').addEventListener('click', summarizeRecords);
+
+    /*************************************************************
+     * 14. 清除历史记录功能
+     *************************************************************/
+
+    // 清除历史记录
+    function cleanMemory() {
+      const cleanMemoryBtn = document.getElementById('cleanMemoryBtn');
+      const originalText = cleanMemoryBtn.textContent;
+
+      // 确认对话框
+      if (!confirm('Are you sure you want to clear all translation history? This action cannot be undone.')) {
+        return;
+      }
+
+      try {
+        // 禁用按钮并显示加载状态
+        cleanMemoryBtn.disabled = true;
+        cleanMemoryBtn.textContent = 'Cleaning...';
+
+        // 清空内存中的历史记录数组
+        audioHistory = [];
+
+        // 清空local storage
+        localStorage.removeItem('translationHistory');
+
+        // 清空界面显示
+        const logContainer = document.getElementById('logContainer');
+        logContainer.innerHTML = '';
+
+        // 重置按钮文本
+        const summarizeBtn = document.getElementById('summarizeBtn');
+        summarizeBtn.textContent = 'Summarize';
+
+        // 重置Toggle按钮文本
+        const toggleBtn = document.getElementById('toggleLogBtn');
+        toggleBtn.textContent = 'Show Log';
+
+        console.log('Translation history cleared successfully');
+
+        // 显示成功消息
+        alert('Translation history has been cleared successfully.');
+
+      } catch (error) {
+        console.error('Error clearing history:', error);
+        alert(`Error clearing history: ${error.message}`);
+      } finally {
+        // 恢复按钮状态
+        cleanMemoryBtn.disabled = false;
+        cleanMemoryBtn.textContent = originalText;
+      }
+    }
+
+    // 绑定Clean Memory按钮事件
+    document.getElementById('cleanMemoryBtn').addEventListener('click', cleanMemory);
   </script>
 </body>
 
