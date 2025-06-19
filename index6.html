@@ -405,6 +405,81 @@
       background-color: #3b5ce8;
     }
 
+    /* 添加文本框全屏图标样式 */
+    .textarea-fullscreen-icon {
+      position: absolute;
+      top: 30px;
+      /* 调整位置到文本框内部 */
+      right: 13px;
+      color: #1a53ff;
+      background: rgba(255, 255, 255, 0.6);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      z-index: 10;
+      width: 45px;
+      height: 45px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.85;
+      transition: all 0.2s;
+    }
+
+    .textarea-fullscreen-icon:hover {
+      opacity: 1;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .textarea-fullscreen-icon:hover {
+      opacity: 1;
+    }
+
+    .column {
+      position: relative;
+    }
+
+    /* 单文本框全屏模式 */
+    body.textarea-fullscreen-mode .container,
+    body.textarea-fullscreen-mode .text-columns,
+    body.textarea-fullscreen-mode .column.fullscreen-active {
+      width: 100%;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+      display: block;
+    }
+
+    body.textarea-fullscreen-mode .column:not(.fullscreen-active),
+    body.textarea-fullscreen-mode header,
+    body.textarea-fullscreen-mode .settings-row,
+    body.textarea-fullscreen-mode .btn-row,
+    body.textarea-fullscreen-mode #audioPlayer,
+    body.textarea-fullscreen-mode .log-container,
+    body.textarea-fullscreen-mode label {
+      display: none !important;
+    }
+
+    body.textarea-fullscreen-mode .column.fullscreen-active textarea {
+      width: 100%;
+      height: 100vh;
+      border: none;
+      border-radius: 0;
+      padding: 20px;
+      font-size: 4rem;
+    }
+
+    /* 全屏模式下的图标位置调整 */
+    body.textarea-fullscreen-mode .textarea-fullscreen-icon {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.8);
+    }
+
     @media (max-width: 768px) {
 
       .text-columns,
@@ -469,6 +544,15 @@
     body.fullscreen-mode .column label {
       font-size: 2.5rem;
       font-weight: bold;
+    }
+
+    /* 全屏模式下的图标位置调整 */
+    body.fullscreen-mode .textarea-fullscreen-icon {
+      position: absolute;
+      top: 60px;
+      right: 15px;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.8);
     }
 
     body.fullscreen-mode #fullScreenBtn {
@@ -544,8 +628,14 @@
     <!-- 左右文本框 -->
     <div class="text-columns">
       <!-- 左侧：输入框 + 发送/录音按钮 -->
-      <div class="column">
+      <div class="column" id="inputColumn">
         <label for="inputText">Input Text</label>
+        <button class="textarea-fullscreen-icon" id="inputFullscreenBtn" title="全屏显示">
+          <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" viewBox="0 0 16 16">
+            <path
+              d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zM.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5z" />
+          </svg>
+        </button>
         <textarea id="inputText" placeholder="Type or paste text here... (Double-click to clear)"></textarea>
         <div class="btn-row">
           <button id="sendBtn" class="btn-send">Send Text</button>
@@ -562,8 +652,14 @@
       </div>
 
       <!-- 右侧：翻译结果(只读) -->
-      <div class="column">
+      <div class="column" id="outputColumn">
         <label for="outputText">Translated Text</label>
+        <button class="textarea-fullscreen-icon" id="outputFullscreenBtn" title="全屏显示">
+          <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" viewBox="0 0 16 16">
+            <path
+              d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zM.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5z" />
+          </svg>
+        </button>
         <textarea id="outputText" readonly placeholder="Translation result here..."></textarea>
       </div>
     </div>
@@ -4301,8 +4397,8 @@
     }
 
     /*************************************************************
-     * 11. 全屏模式功能
-     *************************************************************/
+ * 11. 全屏模式功能
+ *************************************************************/
     const fullScreenBtn = document.getElementById("fullScreenBtn");
     let isFullScreenMode = false;
 
@@ -4328,6 +4424,59 @@
         document.body.classList.remove("fullscreen-mode");
         fullScreenBtn.textContent = "Full Screen";
         isFullScreenMode = false;
+      }
+    });
+
+    /*************************************************************
+     * 12. 文本框单独全屏功能
+     *************************************************************/
+    const inputFullscreenBtn = document.getElementById("inputFullscreenBtn");
+    const outputFullscreenBtn = document.getElementById("outputFullscreenBtn");
+    const inputColumn = document.getElementById("inputColumn");
+    const outputColumn = document.getElementById("outputColumn");
+    let isTextareaFullscreenMode = false;
+    let activeTextareaColumn = null;
+
+    // 输入框全屏按钮
+    inputFullscreenBtn.addEventListener("click", () => {
+      toggleTextareaFullscreen(inputColumn);
+    });
+
+    // 输出框全屏按钮
+    outputFullscreenBtn.addEventListener("click", () => {
+      toggleTextareaFullscreen(outputColumn);
+    });
+
+    // 切换文本框全屏模式
+    function toggleTextareaFullscreen(column) {
+      const body = document.body;
+
+      if (!isTextareaFullscreenMode) {
+        // 进入文本框全屏模式
+        body.classList.add("textarea-fullscreen-mode");
+        column.classList.add("fullscreen-active");
+        activeTextareaColumn = column;
+        isTextareaFullscreenMode = true;
+      } else {
+        // 退出文本框全屏模式
+        body.classList.remove("textarea-fullscreen-mode");
+        if (activeTextareaColumn) {
+          activeTextareaColumn.classList.remove("fullscreen-active");
+        }
+        activeTextareaColumn = null;
+        isTextareaFullscreenMode = false;
+      }
+    }
+
+    // 支持ESC键退出文本框全屏
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && isTextareaFullscreenMode) {
+        document.body.classList.remove("textarea-fullscreen-mode");
+        if (activeTextareaColumn) {
+          activeTextareaColumn.classList.remove("fullscreen-active");
+        }
+        activeTextareaColumn = null;
+        isTextareaFullscreenMode = false;
       }
     });
   </script>
