@@ -4520,6 +4520,15 @@
           const historyItems = JSON.parse(storedHistory);
           console.log(`从Local Storage加载了${historyItems.length}条历史记录`);
 
+          // 将历史记录加载到audioHistory数组中
+          audioHistory = historyItems.map(item => ({
+            timestamp: item.timestamp,
+            originalText: item.originalText,
+            translatedText: item.translatedText,
+            originalAudio: item.originalAudio ? null : null, // 从local storage加载的没有实际音频blob
+            ttsAudio: item.ttsAudio ? null : null // 从local storage加载的没有实际音频blob
+          }));
+
           // 清空日志容器
           const logContainer = document.getElementById('logContainer');
           logContainer.innerHTML = '';
