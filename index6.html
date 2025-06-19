@@ -193,6 +193,32 @@
       /* 添加顶部边距 */
     }
 
+    .log-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .summarize-btn {
+      padding: 6px 12px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      border-radius: 4px;
+      border: none;
+      background-color: #4c6ef5;
+      color: #fff;
+      transition: background-color 0.2s ease;
+    }
+
+    .summarize-btn:hover {
+      background-color: #3b5ce8;
+    }
+
+    .summarize-btn:disabled {
+      background-color: #adb5bd;
+      cursor: not-allowed;
+    }
+
     .log-title {
       font-size: 0.9rem;
       /* 减小字体 */
@@ -720,7 +746,10 @@
     <div class="log-container" id="logContainerParent">
       <div class="log-header">
         <div class="log-title">Translation History (Newest First)</div>
-        <button class="log-toggle-btn" id="toggleLogBtn">Show Log</button>
+        <div class="log-controls">
+          <button class="summarize-btn" id="summarizeBtn">Summarize</button>
+          <button class="log-toggle-btn" id="toggleLogBtn">Show Log</button>
+        </div>
       </div>
       <div id="logContainer" class="log-collapsed"></div>
     </div>
@@ -4696,6 +4725,104 @@
         isTextareaFullscreenMode = false;
       }
     });
+
+    /*************************************************************
+     * 13. 历史记录总结功能
+     *************************************************************/
+
+    // 生成历史记录文本
+    function generateRecordText(records, summary = '') {
+      let recordText = records.map(record => `${record.timestamp}\nInput:${record.originalText}\nTranslation:${record.translatedText}`).join('\n\n');
+      return summary ? `Summary\n${summary}\n\n` + recordText : recordText;
+    }
+
+    // 总结历史记录
+    async function summarizeRecords() {
+      const summarizeBtn = document.getElementById('summarizeBtn');
+      const originalText = summarizeBtn.textContent;
+
+      try {
+        // 禁用按钮并显示加载状态
+        summarizeBtn.disabled = true;
+        summarizeBtn.textContent = 'Summarizing...';
+
+        // 从local storage获取历史记录
+        const storedHistory = loadHistoryFromLocalStorage();
+
+        if (!storedHistory || storedHistory.length === 0) {
+          alert('No history records found to summarize.');
+          return;
+        }
+
+        // 生成历史记录文本
+        let text = storedHistory.map(record => `${record.timestamp}\nInput:${record.originalText}\nTranslation:${record.translatedText}`).join('\n\n');
+
+        // 调用OpenAI API进行总结
+        const response = await fetch(OPENAI_API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${OPENAI_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+              {
+                role: "user",
+                content: `Please summarize the following translation history using bullet points and generate a comprehensive summary. Focus on key themes, common phrases, and overall patterns:\n\n${text}\n\nKey points and summary:`
+              }
+            ],
+            max_tokens: 1000,
+            temperature: 0.7
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to get summary from OpenAI. Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const summary = data.choices[0].message.content;
+
+        // 生成完整的记录文本（包含总结）
+        const fullText = generateRecordText(storedHistory, summary);
+
+        // 生成文件名（包含当前时间）
+        const now = new Date();
+        const timestamp = now.toISOString().slice(0, 19).replace(/:/g, '-');
+        const filename = `translation_summary_${timestamp}.txt`;
+
+        // 下载文件
+        downloadTextFile(fullText, filename);
+
+        console.log('Summary generated and downloaded successfully');
+
+      } catch (error) {
+        console.error('Error generating summary:', error);
+        alert(`Error generating summary: ${error.message}`);
+      } finally {
+        // 恢复按钮状态
+        summarizeBtn.disabled = false;
+        summarizeBtn.textContent = originalText;
+      }
+    }
+
+    // 下载文本文件
+    function downloadTextFile(content, filename) {
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    }
+
+    // 绑定Summarize按钮事件
+    document.getElementById('summarizeBtn').addEventListener('click', summarizeRecords);
   </script>
 </body>
 
