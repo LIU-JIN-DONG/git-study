@@ -837,6 +837,7 @@
 
     // 历史录音和TTS存储
     let audioHistory = []; // 存储历史录音和TTS的数组
+    const MAX_HISTORY_ITEMS = 50; // 最大历史记录数量
     let currentAudioBlob = null; // 当前录音的Blob
     let currentTTSBlob = null; // 当前TTS的Blob
     let sessionTranslationTarget = null; // 当前会话的翻译目标语言
@@ -1895,10 +1896,35 @@
     }
 
     function appendLog(originalText, translatedText, originalAudioBlob = null, ttsAudioBlob = null) {
+      const timestamp = getDateTimeString();
+
+      // 创建历史记录对象
+      const historyItem = {
+        timestamp: timestamp,
+        originalText: originalText,
+        translatedText: translatedText,
+        originalAudio: originalAudioBlob ? true : false,
+        ttsAudio: ttsAudioBlob ? true : false
+      };
+
+      // 保存完整对象到内存中的历史记录数组
+      audioHistory.unshift({
+        timestamp: timestamp,
+        originalText: originalText,
+        translatedText: translatedText,
+        originalAudio: originalAudioBlob,
+        ttsAudio: ttsAudioBlob
+      });
+
+      // 限制内存中的历史记录数量
+      if (audioHistory.length > MAX_HISTORY_ITEMS) {
+        audioHistory.splice(MAX_HISTORY_ITEMS);
+      }
+
+      // 显示历史记录项
       const container = document.getElementById("logContainer");
       const logItem = document.createElement("div");
       logItem.className = "log-item";
-      const timestamp = getDateTimeString();
 
       const pTimestamp = document.createElement("p");
       pTimestamp.textContent = timestamp;
@@ -1921,15 +1947,7 @@
       if (originalAudioBlob) {
         const origAudioBtn = document.createElement("button");
         origAudioBtn.className = "audio-btn";
-        origAudioBtn.innerHTML = '<i class="fas fa-play"></i> 原录音';
-
-        // 获取音频时长并显示
-        getAudioDuration(originalAudioBlob).then(duration => {
-          if (duration) {
-            origAudioBtn.innerHTML += ` ${formatDuration(duration)}`;
-            hasDurationInfo = true;
-          }
-        });
+        origAudioBtn.innerHTML = '<i class="fas fa-play"></i> Original';
 
         origAudioBtn.onclick = function () {
           playAudioBlob(originalAudioBlob);
@@ -2016,6 +2034,10 @@
 
               if (index !== -1) {
                 audioHistory[index].ttsAudio = ttsBlobCopy;
+
+                // 更新本地存储中的TTS标记
+                historyItem.ttsAudio = true;
+                saveHistoryToLocalStorage();
               }
             } else {
               // 如果生成失败，恢复按钮状态
@@ -2042,14 +2064,8 @@
         container.appendChild(logItem);
       }
 
-      // 保存到历史记录数组
-      audioHistory.push({
-        timestamp: timestamp,
-        originalText: originalText,
-        translatedText: translatedText,
-        originalAudio: originalAudioBlob,
-        ttsAudio: ttsAudioBlob
-      });
+      // 保存到本地存储
+      saveHistoryToLocalStorage();
     }
 
     // 播放音频Blob的函数
@@ -2759,6 +2775,13 @@
     /*************************************************************
      * 7. 绑定UI事件 & 初始化
      *************************************************************/
+
+    // 页面加载时从Local Storage加载历史记录
+    document.addEventListener('DOMContentLoaded', function () {
+      // 加载历史记录
+      const storedHistory = loadHistoryFromLocalStorage();
+
+    });
     document.getElementById("applyManualBtn").addEventListener("click", () => {
       const ml = document.getElementById("manualMainLang").value;
       const tl = document.getElementById("manualTargetLang").value;
@@ -4433,6 +4456,110 @@
       const minutes = String(now.getMinutes()).padStart(2, '0');
       const seconds = String(now.getSeconds()).padStart(2, '0');
       return `[${hours}:${minutes}:${seconds}]`;
+    }
+
+    // 保存历史记录到Local Storage
+    function saveHistoryToLocalStorage() {
+      try {
+        // 创建一个不包含Blob对象的历史记录副本
+        const historyForStorage = audioHistory.map(item => ({
+          timestamp: item.timestamp,
+          originalText: item.originalText,
+          translatedText: item.translatedText,
+          originalAudio: item.originalAudio ? true : false,
+          ttsAudio: item.ttsAudio ? true : false
+        }));
+
+        // 限制历史记录数量
+        if (historyForStorage.length > MAX_HISTORY_ITEMS) {
+          historyForStorage.splice(MAX_HISTORY_ITEMS);
+        }
+
+        // 保存到Local Storage
+        localStorage.setItem('translationHistory', JSON.stringify(historyForStorage));
+        console.log(`已保存${historyForStorage.length}条历史记录到Local Storage`);
+      } catch (error) {
+        console.error('保存历史记录到Local Storage失败:', error);
+      }
+    }
+
+    // 从Local Storage加载历史记录
+    function loadHistoryFromLocalStorage() {
+      try {
+        const storedHistory = localStorage.getItem('translationHistory');
+        if (storedHistory) {
+          const historyItems = JSON.parse(storedHistory);
+          console.log(`从Local Storage加载了${historyItems.length}条历史记录`);
+
+          // 清空日志容器
+          const logContainer = document.getElementById('logContainer');
+          logContainer.innerHTML = '';
+
+          // 添加历史记录到界面
+          historyItems.forEach(item => {
+            displayHistoryItem(item);
+          });
+
+          return historyItems;
+        }
+      } catch (error) {
+        console.error('从Local Storage加载历史记录失败:', error);
+      }
+      return [];
+    }
+
+    // 显示单条历史记录
+    function displayHistoryItem(item) {
+      const container = document.getElementById("logContainer");
+      const logItem = document.createElement("div");
+      logItem.className = "log-item";
+
+      const pTimestamp = document.createElement("p");
+      pTimestamp.textContent = item.timestamp;
+      logItem.appendChild(pTimestamp);
+
+      const pOrig = document.createElement("p");
+      pOrig.textContent = item.originalText;
+      logItem.appendChild(pOrig);
+
+      const pTrans = document.createElement("p");
+      pTrans.textContent = item.translatedText;
+      logItem.appendChild(pTrans);
+
+      // 添加音频控制元素
+      const audioControls = document.createElement("div");
+      audioControls.className = "audio-controls";
+
+      // 如果有原始录音标记，添加播放按钮
+      if (item.originalAudio) {
+        const origAudioBtn = document.createElement("button");
+        origAudioBtn.className = "audio-btn";
+        origAudioBtn.innerHTML = '<i class="fas fa-play"></i> Original';
+        origAudioBtn.disabled = true; // 从本地存储加载的历史记录没有实际音频
+        origAudioBtn.title = "刷新后音频不可用";
+        audioControls.appendChild(origAudioBtn);
+      }
+
+      // 如果有TTS音频标记，添加播放按钮
+      if (item.ttsAudio) {
+        const ttsAudioBtn = document.createElement("button");
+        ttsAudioBtn.className = "audio-btn";
+        ttsAudioBtn.innerHTML = '<i class="fas fa-play"></i> TTS';
+        ttsAudioBtn.disabled = true; // 从本地存储加载的历史记录没有实际音频
+        ttsAudioBtn.title = "刷新后音频不可用";
+        audioControls.appendChild(ttsAudioBtn);
+      }
+
+
+      if (audioControls.children.length > 0) {
+        logItem.appendChild(audioControls);
+      }
+
+      if (container.firstChild) {
+        container.insertBefore(logItem, container.firstChild);
+      } else {
+        container.appendChild(logItem);
+      }
     }
 
     /*************************************************************
