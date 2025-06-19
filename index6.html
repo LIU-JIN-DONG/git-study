@@ -424,7 +424,6 @@
       align-items: center;
       justify-content: center;
       opacity: 0.85;
-      transition: all 0.2s;
     }
 
     .textarea-fullscreen-icon:hover {
@@ -467,17 +466,51 @@
       height: 100vh;
       border: none;
       border-radius: 0;
-      padding: 20px;
-      font-size: 4rem;
+      padding: 25px;
+      font-size: 5.5rem;
     }
 
     /* 全屏模式下的图标位置调整 */
     body.textarea-fullscreen-mode .textarea-fullscreen-icon {
       position: fixed;
-      top: 20px;
-      right: 20px;
+      top: 30px;
+      right: 30px;
       z-index: 1000;
       background: rgba(255, 255, 255, 0.8);
+    }
+
+    /* 全屏模式下的播放按钮 */
+    .fullscreen-play-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.8);
+      border: none;
+      cursor: pointer;
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: #adb5bd;
+      transition: all 0.2s;
+    }
+
+    body.textarea-fullscreen-mode .fullscreen-play-btn {
+      display: flex;
+    }
+
+    .fullscreen-play-btn.active {
+      color: #4c6ef5;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .fullscreen-play-btn:hover {
+      background: rgba(255, 255, 255, 0.9);
+      transform: scale(1.05);
     }
 
     @media (max-width: 768px) {
@@ -637,6 +670,9 @@
           </svg>
         </button>
         <textarea id="inputText" placeholder="Type or paste text here... (Double-click to clear)"></textarea>
+        <button class="fullscreen-play-btn" id="inputFullscreenPlayBtn" title="播放音频">
+          <i class="fas fa-play"></i>
+        </button>
         <div class="btn-row">
           <button id="sendBtn" class="btn-send">Send Text</button>
           <button id="recordBtn" class="btn-record">
@@ -661,6 +697,9 @@
           </svg>
         </button>
         <textarea id="outputText" readonly placeholder="Translation result here..."></textarea>
+        <button class="fullscreen-play-btn" id="outputFullscreenPlayBtn" title="播放音频">
+          <i class="fas fa-play"></i>
+        </button>
       </div>
     </div>
 
@@ -4457,6 +4496,9 @@
         column.classList.add("fullscreen-active");
         activeTextareaColumn = column;
         isTextareaFullscreenMode = true;
+
+        // 更新播放按钮状态
+        updateFullscreenPlayButton(column.id === "inputColumn");
       } else {
         // 退出文本框全屏模式
         body.classList.remove("textarea-fullscreen-mode");
@@ -4467,6 +4509,54 @@
         isTextareaFullscreenMode = false;
       }
     }
+
+    // 全屏播放按钮
+    const inputFullscreenPlayBtn = document.getElementById("inputFullscreenPlayBtn");
+    const outputFullscreenPlayBtn = document.getElementById("outputFullscreenPlayBtn");
+
+    // 更新播放按钮状态
+    function updateFullscreenPlayButton(isInputColumn) {
+      const playBtn = isInputColumn ? inputFullscreenPlayBtn : outputFullscreenPlayBtn;
+
+      // 检查是否有可播放的音频
+      let hasAudio = false;
+
+      if (isInputColumn) {
+        // 检查是否有原始录音
+        hasAudio = currentAudioBlob !== null || (audioHistory.length > 0 && audioHistory[0].originalAudio !== null);
+      } else {
+        // 检查是否有TTS音频
+        hasAudio = currentTTSBlob !== null || (audioHistory.length > 0 && audioHistory[0].ttsAudio !== null);
+      }
+
+      // 更新按钮状态
+      if (hasAudio) {
+        playBtn.classList.add("active");
+        playBtn.disabled = false;
+      } else {
+        playBtn.classList.remove("active");
+        playBtn.disabled = true;
+      }
+    }
+
+    // 绑定播放按钮点击事件
+    inputFullscreenPlayBtn.addEventListener("click", function () {
+      // 播放最近的原始录音
+      if (currentAudioBlob) {
+        playAudioBlob(currentAudioBlob);
+      } else if (audioHistory.length > 0 && audioHistory[0].originalAudio) {
+        playAudioBlob(audioHistory[0].originalAudio);
+      }
+    });
+
+    outputFullscreenPlayBtn.addEventListener("click", function () {
+      // 播放最近的TTS音频
+      if (currentTTSBlob) {
+        playAudioBlob(currentTTSBlob);
+      } else if (audioHistory.length > 0 && audioHistory[0].ttsAudio) {
+        playAudioBlob(audioHistory[0].ttsAudio);
+      }
+    });
 
     // 支持ESC键退出文本框全屏
     document.addEventListener("keydown", (e) => {
