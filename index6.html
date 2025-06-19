@@ -425,7 +425,8 @@
     body.fullscreen-mode header,
     body.fullscreen-mode #audioPlayer,
     body.fullscreen-mode .log-container,
-    body.fullscreen-mode .btn-record {
+    body.fullscreen-mode .btn-record,
+    body.fullscreen-mode #sendBtn {
       display: none !important;
     }
 
@@ -446,12 +447,23 @@
     body.fullscreen-mode .text-columns {
       flex: 1;
       margin-bottom: 5px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    body.fullscreen-mode .column {
+      flex: 1;
+      width: 50%;
+      padding: 0 10px;
+      box-sizing: border-box;
     }
 
     body.fullscreen-mode .column textarea {
       min-height: 0;
       height: 100%;
       font-size: 4rem !important;
+      box-sizing: border-box;
+      width: 100%;
     }
 
     body.fullscreen-mode .column label {
@@ -541,10 +553,10 @@
             <i class="fas fa-microphone"></i> Record
           </button>
           <button id="gmicMicBtn" class="btn-record">
-            <i class="fas fa-bluetooth"></i> GMIC-MIC01
+            GMIC-MIC01
           </button>
           <button id="gmicMicBtn2" class="btn-record">
-            <i class="fas fa-bluetooth"></i> GMIC-MIC02
+            GMIC-MIC02
           </button>
         </div>
       </div>
@@ -1251,7 +1263,7 @@
               const micBtn = activeMicIndex === 0 ? gmicMicBtn : gmicMicBtn2;
               micBtn.classList.remove('recording');
               micBtn.classList.add('waiting');
-              micBtn.innerHTML = `<i class="fas fa-cog fa-spin"></i> 处理中...`;
+              micBtn.innerHTML = `<i class="fas fa-cog fa-spin"></i> Processing...`;
 
               // 停止Azure识别器
               if (bleRecognizer) {
@@ -1527,7 +1539,7 @@
       const activeMicBtn = activeMicIndex === 0 ? gmicMicBtn : gmicMicBtn2;
       activeMicBtn.classList.remove('waiting');
       activeMicBtn.classList.add('recording');
-      activeMicBtn.innerHTML = '<i class="fas fa-microphone"></i> GMIC 录音中... (00:00)';
+      activeMicBtn.innerHTML = 'GMIC 录音中... (00:00)';
 
       // 启动数据检查定时器
       if (checkDataTimeoutInterval) {
@@ -2893,7 +2905,7 @@
             // 更新UI状态为未连接
             const micBtn = micIndex === 0 ? gmicMicBtn : gmicMicBtn2;
             micBtn.classList.remove('connecting', 'connected');
-            micBtn.innerHTML = `<i class="fas fa-bluetooth"></i> GMIC-MIC0${micIndex + 1}`;
+            micBtn.innerHTML = `GMIC-MIC0${micIndex + 1}`;
 
             return; // 退出连接流程
           }
@@ -2916,13 +2928,13 @@
         const micBtn = micIndex === 0 ? gmicMicBtn : gmicMicBtn2;
         micBtn.classList.remove('connecting');
         micBtn.classList.add('connected');
-        micBtn.innerHTML = `<i class="fas fa-bluetooth"></i> Connected ${micIndex + 1}`;
+        micBtn.innerHTML = `Connected ${micIndex + 1}`;
 
       } catch (error) {
         console.error(`Bluetooth Error (Mic ${micIndex + 1}):`, error);
         const micBtn = micIndex === 0 ? gmicMicBtn : gmicMicBtn2;
         micBtn.classList.remove('connecting', 'connected');
-        micBtn.innerHTML = `<i class="fas fa-bluetooth"></i> GMIC-MIC0${micIndex + 1}`;
+        micBtn.innerHTML = `GMIC-MIC0${micIndex + 1}`;
 
         // 显示更友好的错误消息
         if (error.message.includes("GATT Server is disconnected")) {
@@ -3182,7 +3194,7 @@
               const micBtn = activeMicIndex === 0 ? gmicMicBtn : gmicMicBtn2;
               micBtn.classList.remove('recording');
               micBtn.classList.add('waiting');
-              micBtn.innerHTML = `<i class="fas fa-cog fa-spin"></i> 处理中...`;
+              micBtn.innerHTML = `<i class="fas fa-cog fa-spin"></i> Processing...`;
 
               // 停止Azure识别器
               if (bleRecognizer) {
@@ -3266,7 +3278,7 @@
 
       const micBtn = micIndex === 0 ? gmicMicBtn : gmicMicBtn2;
       micBtn.classList.remove('connecting', 'waiting', 'recording', 'connected');
-      micBtn.innerHTML = `<i class="fas fa-bluetooth"></i> GMIC-MIC0${micIndex + 1}`;
+      micBtn.innerHTML = `GMIC-MIC0${micIndex + 1}`;
 
       resetBluetoothVariables(micIndex);
 
@@ -3302,14 +3314,14 @@
           console.log(`设备 ${micIndex + 1} 重连成功`);
           micBtn.classList.remove('connecting');
           micBtn.classList.add('connected');
-          micBtn.innerHTML = `<i class="fas fa-bluetooth"></i> 已重连 ${micIndex + 1}`;
+          micBtn.innerHTML = `已重连 ${micIndex + 1}`;
         } else {
           throw new Error("设备引用已丢失，无法重连");
         }
       } catch (error) {
         console.error(`重连失败 (Mic ${micIndex + 1}):`, error);
         micBtn.classList.remove('connecting', 'connected');
-        micBtn.innerHTML = `<i class="fas fa-bluetooth"></i> GMIC-MIC0${micIndex + 1}`;
+        micBtn.innerHTML = `GMIC-MIC0${micIndex + 1}`;
       }
     }
 
@@ -3383,7 +3395,7 @@
       const activeMicBtn = activeMicIndex === 0 ? gmicMicBtn : gmicMicBtn2;
       activeMicBtn.classList.remove('waiting');
       activeMicBtn.classList.add('recording');
-      activeMicBtn.innerHTML = '<i class="fas fa-microphone"></i> GMIC 录音中... (00:00)';
+      activeMicBtn.innerHTML = 'GMIC 录音中... (00:00)';
 
       // 启动数据检查定时器
       if (checkDataTimeoutInterval) {
@@ -3450,7 +3462,7 @@
       const activeMicBtn = activeMicIndex === 0 ? gmicMicBtn : gmicMicBtn2;
 
       if (activeMicBtn.innerHTML.includes("GMIC")) {
-        activeMicBtn.innerHTML = `<i class="fas fa-microphone"></i> GMIC ${activeMicIndex + 1} 录音中 (${mm}:${ss})`;
+        activeMicBtn.innerHTML = `GMIC ${activeMicIndex + 1} 录音中 (${mm}:${ss})`;
       }
     }
 
@@ -4044,7 +4056,7 @@
             const micBtn = activeMicIndex === 0 ? gmicMicBtn : gmicMicBtn2;
             micBtn.classList.remove('recording');
             micBtn.classList.add('waiting');
-            micBtn.innerHTML = `<i class="fas fa-cog fa-spin"></i> 处理中...`;
+            micBtn.innerHTML = `<i class="fas fa-cog fa-spin"></i> Processing...`;
 
             // 停止Azure识别器
             if (bleRecognizer) {
