@@ -12,7 +12,7 @@ class Settings:
     DATABASE_URL: str = "sqlite://./mic05.db"  # 默认SQLite，可改为PostgreSQL
     
     # 外部API密钥配置
-    OPENAI_API_KEY: str = "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"
+    OPENAI_API_KEY: str = "xxxx"
     
     # ASR服务配置（根据选择的服务）
     AZURE_SPEECH_KEY: str = ""
