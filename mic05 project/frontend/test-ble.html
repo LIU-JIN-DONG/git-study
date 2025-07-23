@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLE Microphone Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/modules/websocket-client.js"></script>
+    <script type="module">
+        // Import modules
+        import { BLEMicrophone } from './js/modules/bluetooth/ble-microphone.js';
+        import { BLEAudioProcessor } from './js/modules/bluetooth/ble-audio-processor.js';
+        import { AudioRecorder } from './js/modules/audio-recorder.js';
+        
+        // Make them available globally
+        window.BLEMicrophone = BLEMicrophone;
+        window.BLEAudioProcessor = BLEAudioProcessor;
+        window.AudioRecorder = AudioRecorder;
+    </script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8">BLE Microphone Integration Test</h1>
+        
+        <!-- Connection Status -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Connection Status</h2>
+            <div id="connectionStatus" class="text-gray-600">Not connected</div>
+            <div id="deviceInfo" class="mt-2 text-sm text-gray-500"></div>
+        </div>
+        
+        <!-- Control Buttons -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Controls</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <button id="connectBLE" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    Connect BLE Device
+                </button>
+                <button id="disconnectBLE" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600" disabled>
+                    Disconnect BLE
+                </button>
+                <button id="connectWS" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                    Connect WebSocket
+                </button>
+                <button id="testRecord" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600" disabled>
+                    Test Recording
+                </button>
+            </div>
+        </div>
+        
+        <!-- Audio Data Log -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Audio Data Log</h2>
+            <div id="audioLog" class="h-64 overflow-y-auto bg-gray-50 p-4 rounded font-mono text-sm">
+                <div class="text-gray-500">Waiting for audio data...</div>
+            </div>
+        </div>
+        
+        <!-- Event Log -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4">Event Log</h2>
+            <div id="eventLog" class="h-64 overflow-y-auto bg-gray-50 p-4 rounded text-sm">
+                <div class="text-gray-500">No events yet...</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let audioRecorder = null;
+        let wsClient = null;
+        let isRecording = false;
+        
+        // Initialize
+        async function init() {
+            try {
+                // Initialize AudioRecorder
+                audioRecorder = new AudioRecorder();
+                
+                // Set up event listeners
+                setupAudioRecorderEvents();
+                
+                // Set up button handlers
+                document.getElementById('connectBLE').addEventListener('click', connectBLE);
+                document.getElementById('disconnectBLE').addEventListener('click', disconnectBLE);
+                document.getElementById('connectWS').addEventListener('click', connectWebSocket);
+                document.getElementById('testRecord').addEventListener('click', toggleRecording);
+                
+                logEvent('Initialization complete', 'success');
+            } catch (error) {
+                logEvent(`Initialization failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Connect to BLE device
+        async function connectBLE() {
+            try {
+                logEvent('Searching for BLE devices...', 'info');
+                const success = await audioRecorder.switchToBluetooth();
+                
+                if (success) {
+                    document.getElementById('connectBLE').disabled = true;
+                    document.getElementById('disconnectBLE').disabled = false;
+                    document.getElementById('testRecord').disabled = false;
+                    logEvent('BLE device connected successfully', 'success');
+                } else {
+                    logEvent('Failed to connect to BLE device', 'error');
+                }
+            } catch (error) {
+                logEvent(`BLE connection error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Disconnect BLE device
+        async function disconnectBLE() {
+            try {
+                await audioRecorder.switchToSystem();
+                document.getElementById('connectBLE').disabled = false;
+                document.getElementById('disconnectBLE').disabled = true;
+                document.getElementById('testRecord').disabled = true;
+                logEvent('BLE device disconnected', 'info');
+            } catch (error) {
+                logEvent(`BLE disconnection error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Connect to WebSocket
+        async function connectWebSocket() {
+            try {
+                wsClient = new WebSocketClient();
+                audioRecorder.setWebSocketClient(wsClient);
+                
+                wsClient.on('connected', (data) => {
+                    logEvent(`WebSocket connected: ${data.session_id}`, 'success');
+                });
+                
+                wsClient.on('error', (data) => {
+                    logEvent(`WebSocket error: ${data.message}`, 'error');
+                });
+                
+                await wsClient.connect('ws://localhost:3001', ['zh-CN', 'en-US']);
+                logEvent('Connecting to WebSocket...', 'info');
+            } catch (error) {
+                logEvent(`WebSocket connection error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Toggle recording
+        async function toggleRecording() {
+            if (!isRecording) {
+                const success = await audioRecorder.startRecording();
+                if (success) {
+                    isRecording = true;
+                    document.getElementById('testRecord').textContent = 'Stop Recording';
+                    document.getElementById('testRecord').classList.remove('bg-purple-500', 'hover:bg-purple-600');
+                    document.getElementById('testRecord').classList.add('bg-red-500', 'hover:bg-red-600');
+                    logEvent('Recording started', 'success');
+                }
+            } else {
+                audioRecorder.stopRecording();
+                isRecording = false;
+                document.getElementById('testRecord').textContent = 'Test Recording';
+                document.getElementById('testRecord').classList.remove('bg-red-500', 'hover:bg-red-600');
+                document.getElementById('testRecord').classList.add('bg-purple-500', 'hover:bg-purple-600');
+                logEvent('Recording stopped', 'info');
+            }
+        }
+        
+        // Set up AudioRecorder event listeners
+        function setupAudioRecorderEvents() {
+            audioRecorder.on('bleConnected', (data) => {
+                document.getElementById('connectionStatus').textContent = 'Connected';
+                document.getElementById('connectionStatus').className = 'text-green-600 font-semibold';
+                document.getElementById('deviceInfo').textContent = 
+                    `Device: ${data.device.name} | System ID: ${data.systemId || 'N/A'}`;
+                logEvent(`BLE connected: ${data.device.name}`, 'success');
+            });
+            
+            audioRecorder.on('bleDisconnected', () => {
+                document.getElementById('connectionStatus').textContent = 'Not connected';
+                document.getElementById('connectionStatus').className = 'text-gray-600';
+                document.getElementById('deviceInfo').textContent = '';
+                logEvent('BLE disconnected', 'warning');
+            });
+            
+            audioRecorder.on('bleButtonEvent', (data) => {
+                logEvent(`BLE button event: value=${data.value}`, 'info');
+            });
+            
+            audioRecorder.on('bleAudioData', (data) => {
+                logAudioData(data);
+            });
+            
+            audioRecorder.on('error', (data) => {
+                logEvent(`Error: ${data.error.message}`, 'error');
+            });
+            
+            audioRecorder.on('inputSourceChanged', (data) => {
+                logEvent(`Input source changed to: ${data.source}`, 'info');
+            });
+        }
+        
+        // Log audio data
+        function logAudioData(data) {
+            const audioLog = document.getElementById('audioLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'mb-2 text-xs';
+            logEntry.innerHTML = `
+                <span class="text-gray-500">${timestamp}</span>
+                <span class="text-blue-600 ml-2">PCM Data:</span>
+                <span class="text-gray-700">${data.data.length} samples @ ${data.sampleRate}Hz</span>
+                <div class="text-gray-600 mt-1">Raw bytes: ${Array.from(data.rawData.slice(0, 20)).map(b => '0x' + b.toString(16).padStart(2, '0')).join(' ')}...</div>
+            `;
+            
+            audioLog.appendChild(logEntry);
+            audioLog.scrollTop = audioLog.scrollHeight;
+            
+            // Keep only last 50 entries
+            while (audioLog.children.length > 50) {
+                audioLog.removeChild(audioLog.firstChild);
+            }
+        }
+        
+        // Log event
+        function logEvent(message, type = 'info') {
+            const eventLog = document.getElementById('eventLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'mb-1';
+            
+            let icon = '📝';
+            let color = 'text-gray-700';
+            
+            switch (type) {
+                case 'success':
+                    icon = '✅';
+                    color = 'text-green-600';
+                    break;
+                case 'error':
+                    icon = '❌';
+                    color = 'text-red-600';
+                    break;
+                case 'warning':
+                    icon = '⚠️';
+                    color = 'text-yellow-600';
+                    break;
+                case 'info':
+                    icon = '📝';
+                    color = 'text-blue-600';
+                    break;
+            }
+            
+            logEntry.innerHTML = `
+                <span class="text-gray-500">${timestamp}</span>
+                <span class="ml-2">${icon}</span>
+                <span class="${color} ml-1">${message}</span>
+            `;
+            
+            eventLog.appendChild(logEntry);
+            eventLog.scrollTop = eventLog.scrollHeight;
+        }
+        
+        // Initialize on page load
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
