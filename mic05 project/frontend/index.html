@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>VOX AI Voice Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- WebSocket and Audio modules -->
@@ -41,36 +42,36 @@
         window.ConversationDetailManager = ConversationDetailManager;
         window.conversationDetailManager = conversationDetailManager;
         window.bluetoothDeviceManager = bluetoothDeviceManager;
-        
+
         // 创建蓝牙弹窗实例
         window.bluetoothModalUI = new BluetoothModalUI(bluetoothDeviceManager);
 
         // Signal that modules are loaded
         window.modulesLoaded = true;
-        
+
         // 蓝牙断开调试函数（开发时使用）
-        window.testBluetoothNotifications = function() {
+        window.testBluetoothNotifications = function () {
             console.log('🧪 Testing Bluetooth disconnect notifications...');
             showNotification('BLE Microphone disconnected');
             setTimeout(() => showNotification('AirPods Pro disconnected unexpectedly'), 1500);
             setTimeout(() => showNotification('Disconnected from AirPods Pro'), 3000);
         };
-        
+
         // 蓝牙互动功能测试函数（开发时使用）
-        window.testBluetoothInteraction = function() {
+        window.testBluetoothInteraction = function () {
             console.log('🧪 Testing Bluetooth interaction...');
             console.log('');
-            
+
             if (!audioRecorder) {
                 console.error('❌ Audio recorder not initialized');
                 return;
             }
-            
+
             // 检查音频录制器状态
             console.log('📱 Audio Recorder Status:');
             console.log('  - Input type:', audioRecorder.inputType);
             console.log('  - BLE microphone instance:', !!audioRecorder.bleMicrophone);
-            
+
             if (audioRecorder.bleMicrophone) {
                 console.log('  - BLE microphone connected:', audioRecorder.bleMicrophone.isConnected);
                 console.log('  - Device name:', audioRecorder.bleMicrophone.device?.name);
@@ -79,9 +80,9 @@
                 console.log('  - Voice data characteristic:', !!audioRecorder.bleMicrophone.voiceDataCharacteristic);
                 console.log('  - Function model characteristic:', !!audioRecorder.bleMicrophone.functionModelCharacteristic);
             }
-            
+
             console.log('');
-            
+
             // 检查设备管理器状态
             if (window.bluetoothDeviceManager) {
                 const connectedDevice = window.bluetoothDeviceManager.getConnectedDevice();
@@ -89,12 +90,12 @@
                 console.log('  - Connected device:', connectedDevice);
                 console.log('  - Connected device name:', connectedDevice?.name);
                 console.log('');
-                
+
                 // 如果设备管理器有连接的设备，但音频录制器没有，尝试手动连接
                 if (connectedDevice && (!audioRecorder.bleMicrophone || !audioRecorder.bleMicrophone.isConnected)) {
                     console.log('🔧 Device Manager has connected device but Audio Recorder does not!');
                     console.log('🔄 Attempting to manually connect Audio Recorder...');
-                    
+
                     if (window.bluetoothIntegration) {
                         // 手动触发连接
                         window.bluetoothIntegration.deviceManager.dispatchEvent(new CustomEvent('deviceConnected', {
@@ -107,12 +108,12 @@
                     }
                 }
             }
-            
+
             if (audioRecorder.inputType !== 'bluetooth') {
                 console.warn('⚠️ Not using Bluetooth input. Current input type:', audioRecorder.inputType);
                 console.log('💡 This might be normal if you just connected the device.');
             }
-            
+
             if (!audioRecorder.bleMicrophone || !audioRecorder.bleMicrophone.isConnected) {
                 console.warn('⚠️ BLE microphone not connected to Audio Recorder');
                 console.log('💡 Try connecting the device again through the custom Bluetooth modal.');
@@ -122,25 +123,25 @@
                 console.log('💡 Check the console for button events and audio data.');
             }
         };
-        
+
         // 测试蓝牙集成状态（调试用）
-        window.testBluetoothIntegration = function() {
+        window.testBluetoothIntegration = function () {
             console.log('🧪 Testing Bluetooth Integration Status...');
             console.log('');
-            
+
             console.log('📱 Integration Status:');
             console.log('  - bluetoothIntegration exists:', !!window.bluetoothIntegration);
             console.log('  - bluetoothDeviceManager exists:', !!window.bluetoothDeviceManager);
             console.log('  - audioRecorder exists:', !!window.audioRecorder);
-            
+
             if (window.bluetoothIntegration) {
                 console.log('  - Integration device manager:', !!window.bluetoothIntegration.deviceManager);
                 console.log('  - Integration audio recorder:', !!window.bluetoothIntegration.audioRecorder);
-                
+
                 // 测试事件是否能够派发和接收
                 console.log('');
                 console.log('🧪 Testing event dispatching...');
-                
+
                 // 创建一个临时的事件监听器来测试
                 let eventReceived = false;
                 const testListener = (e) => {
@@ -148,12 +149,12 @@
                     console.log('✅ Test event received:', e.detail);
                     window.bluetoothIntegration.deviceManager.removeEventListener('testEvent', testListener);
                 };
-                
+
                 window.bluetoothIntegration.deviceManager.addEventListener('testEvent', testListener);
                 window.bluetoothIntegration.deviceManager.dispatchEvent(new CustomEvent('testEvent', {
                     detail: { test: 'success' }
                 }));
-                
+
                 setTimeout(() => {
                     if (eventReceived) {
                         console.log('✅ Event system working correctly');
@@ -162,24 +163,24 @@
                     }
                 }, 100);
             }
-            
+
             console.log('');
             console.log('💡 Try connecting a device via native popup and watch the logs');
         };
-        
+
         // 强制重新连接蓝牙设备（调试用）
-        window.forceReconnectBluetooth = function() {
+        window.forceReconnectBluetooth = function () {
             console.log('🔄 Force reconnecting Bluetooth device...');
-            
+
             const connectedDevice = window.bluetoothDeviceManager?.getConnectedDevice();
             if (!connectedDevice) {
                 console.error('❌ No connected device found in device manager');
                 return;
             }
-            
+
             console.log('🔧 Found connected device:', connectedDevice.name);
             console.log('🔄 Attempting to reconnect audio recorder...');
-            
+
             if (audioRecorder && connectedDevice.device) {
                 audioRecorder.connectBluetoothDevice(connectedDevice.device)
                     .then(success => {
@@ -194,9 +195,9 @@
                     });
             }
         };
-        
+
         // 检查模块加载状态（调试用）
-        window.checkModuleStatus = function() {
+        window.checkModuleStatus = function () {
             console.log('🔍 Module Loading Status Check:');
             console.log('');
             console.log('📦 Imported Functions:');
@@ -213,7 +214,7 @@
             console.log('  - audioRecorder:', typeof audioRecorder !== 'undefined');
             console.log('  - wsClient:', typeof wsClient !== 'undefined');
             console.log('');
-            
+
             // 检查是否有任何缺失的依赖
             const issues = [];
             if (typeof initializeBluetoothIntegration !== 'function') {
@@ -222,33 +223,33 @@
             if (!window.bluetoothDeviceManager) {
                 issues.push('bluetoothDeviceManager not initialized');
             }
-            
+
             if (issues.length > 0) {
                 console.warn('⚠️ Found issues:', issues);
             } else {
                 console.log('✅ All modules loaded successfully');
             }
         };
-        
+
         // 测试WebSocket连接状态（调试用）
-        window.testWebSocketConnection = function() {
+        window.testWebSocketConnection = function () {
             console.log('🧪 Testing WebSocket Connection...');
             console.log('');
-            
+
             if (!wsClient) {
                 console.error('❌ WebSocket client not initialized');
                 return;
             }
-            
+
             console.log('📡 WebSocket Status:');
             console.log('  - Connected:', wsClient.isConnected);
             console.log('  - Ready state:', wsClient.ws ? wsClient.ws.readyState : 'null');
             console.log('  - URL:', wsClient.ws ? wsClient.ws.url : 'null');
-            
+
             if (wsClient.isConnected) {
                 console.log('✅ WebSocket is connected and ready');
                 console.log('💡 No connect message was sent to backend (as requested)');
-                
+
                 // 测试发送ping消息
                 console.log('🏓 Sending ping to test communication...');
                 if (wsClient.sendPing) {
@@ -259,11 +260,11 @@
                 console.log('💡 Try refreshing the page to reconnect');
             }
         };
-        
+
         // 测试覆盖通知系统（调试用）
-        window.testOverlayNotifications = function() {
+        window.testOverlayNotifications = function () {
             console.log('🧪 Testing overlay notification system...');
-            
+
             const notifications = [
                 { type: 'info', message: 'Connected to HA-MIC04 L8160' },
                 { type: 'error', message: 'BLE Microphone disconnected' },
@@ -271,16 +272,16 @@
                 { type: 'error', message: 'Device disconnected unexpectedly' },
                 { type: 'info', message: 'Translation confidence low - please speak clearly' }
             ];
-            
+
             notifications.forEach((notif, index) => {
                 setTimeout(() => {
                     showNotification(notif.message);
                 }, index * 1500); // 间隔1.5秒显示
             });
-            
+
             console.log('📱 Watch notifications appear at the top of the phone, below the Dynamic Island');
         };
-        
+
         // 测试新通知系统（开发时使用，生产时可移除）
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             setTimeout(() => {
@@ -399,26 +400,91 @@
         }
 
         /* Flag styles with SVG background images */
-        .flag-us { background: url('static/js/picture/country/English.svg') no-repeat center; background-size: 18px 14px; }
-        .flag-cn { background: url('static/js/picture/country/中文.svg') no-repeat center; background-size: 18px 14px; }
-        .flag-jp { background: url('static/js/picture/country/日本語.svg') no-repeat center; background-size: 18px 14px; }
-        .flag-es { background: url('static/js/picture/country/español.svg') no-repeat center; background-size: 18px 14px; }
-        .flag-fr { background: url('static/js/picture/country/français.svg') no-repeat center; background-size: 18px 14px; }
-        .flag-de { background: url('static/js/picture/country/Deutsch.svg') no-repeat center; background-size: 18px 14px; }
-        .flag-kr { background: url('static/js/picture/country/한국어.svg') no-repeat center; background-size: 18px 14px; }
-        .flag-ru { background: url('static/js/picture/country/русский.svg') no-repeat center; background-size: 18px 14px; }
-        .flag-ar { background: url('static/js/picture/country/العربية.svg') no-repeat center; background-size: 18px 14px; }
-        .flag-vi { background: url('static/js/picture/country/tiếng Việt.svg') no-repeat center; background-size: 18px 14px; }
-        .flag-tl { background: url('static/js/picture/country/Tagalog.svg') no-repeat center; background-size: 18px 14px; }
-        
+        .flag-us {
+            background: url('static/js/picture/country/English.svg') no-repeat center;
+            background-size: 18px 14px;
+        }
+
+        .flag-cn {
+            background: url('static/js/picture/country/中文.svg') no-repeat center;
+            background-size: 18px 14px;
+        }
+
+        .flag-jp {
+            background: url('static/js/picture/country/日本語.svg') no-repeat center;
+            background-size: 18px 14px;
+        }
+
+        .flag-es {
+            background: url('static/js/picture/country/español.svg') no-repeat center;
+            background-size: 18px 14px;
+        }
+
+        .flag-fr {
+            background: url('static/js/picture/country/français.svg') no-repeat center;
+            background-size: 18px 14px;
+        }
+
+        .flag-de {
+            background: url('static/js/picture/country/Deutsch.svg') no-repeat center;
+            background-size: 18px 14px;
+        }
+
+        .flag-kr {
+            background: url('static/js/picture/country/한국어.svg') no-repeat center;
+            background-size: 18px 14px;
+        }
+
+        .flag-ru {
+            background: url('static/js/picture/country/русский.svg') no-repeat center;
+            background-size: 18px 14px;
+        }
+
+        .flag-ar {
+            background: url('static/js/picture/country/العربية.svg') no-repeat center;
+            background-size: 18px 14px;
+        }
+
+        .flag-vi {
+            background: url('static/js/picture/country/tiếng Việt.svg') no-repeat center;
+            background-size: 18px 14px;
+        }
+
+        .flag-tl {
+            background: url('static/js/picture/country/Tagalog.svg') no-repeat center;
+            background-size: 18px 14px;
+        }
+
         /* Fallback styles for languages without SVG files */
-        .flag-it { background: #6366f1; color: white; font-size: 8px; }
-        .flag-it::before { content: 'IT'; }
-        .flag-pt { background: #6366f1; color: white; font-size: 8px; }
-        .flag-pt::before { content: 'PT'; }
-        
-        .flag-auto { background: #6366f1; color: white; font-size: 10px; }
-        .flag-auto::before { content: 'AI'; }
+        .flag-it {
+            background: #6366f1;
+            color: white;
+            font-size: 8px;
+        }
+
+        .flag-it::before {
+            content: 'IT';
+        }
+
+        .flag-pt {
+            background: #6366f1;
+            color: white;
+            font-size: 8px;
+        }
+
+        .flag-pt::before {
+            content: 'PT';
+        }
+
+        .flag-auto {
+            background: #6366f1;
+            color: white;
+            font-size: 10px;
+        }
+
+        .flag-auto::before {
+            content: 'AI';
+        }
 
         /* Simplified background styles */
         .neural-bg {
@@ -441,7 +507,7 @@
             width: 20px;
             gap: 2px;
         }
-        
+
         .voice-bar {
             width: 2.5px;
             height: 4px;
@@ -449,60 +515,149 @@
             border-radius: 1px;
             transition: all 0.3s ease;
         }
-        
+
         .voice-static .voice-bar {
             opacity: 0.8;
         }
 
-        .voice-animated .voice-bar.bar1 { 
+        .voice-animated .voice-bar.bar1 {
             animation: voiceWave1 1.2s ease-in-out infinite;
         }
-        .voice-animated .voice-bar.bar2 { 
+
+        .voice-animated .voice-bar.bar2 {
             animation: voiceWave2 1.1s ease-in-out infinite;
         }
-        .voice-animated .voice-bar.bar3 { 
+
+        .voice-animated .voice-bar.bar3 {
             animation: voiceWave3 1.3s ease-in-out infinite;
         }
-        .voice-animated .voice-bar.bar4 { 
+
+        .voice-animated .voice-bar.bar4 {
             animation: voiceWave4 1.0s ease-in-out infinite;
         }
-        .voice-animated .voice-bar.bar5 { 
+
+        .voice-animated .voice-bar.bar5 {
             animation: voiceWave5 1.4s ease-in-out infinite;
         }
 
         @keyframes voiceWave1 {
-            0%, 100% { transform: scaleY(0.8); opacity: 0.6; }
-            25% { transform: scaleY(4.5); opacity: 0.9; }
-            50% { transform: scaleY(2.0); opacity: 1; }
-            75% { transform: scaleY(6.0); opacity: 0.8; }
+
+            0%,
+            100% {
+                transform: scaleY(0.8);
+                opacity: 0.6;
+            }
+
+            25% {
+                transform: scaleY(4.5);
+                opacity: 0.9;
+            }
+
+            50% {
+                transform: scaleY(2.0);
+                opacity: 1;
+            }
+
+            75% {
+                transform: scaleY(6.0);
+                opacity: 0.8;
+            }
         }
-        
+
         @keyframes voiceWave2 {
-            0%, 100% { transform: scaleY(1.0); opacity: 0.7; }
-            20% { transform: scaleY(5.5); opacity: 1; }
-            40% { transform: scaleY(2.5); opacity: 0.9; }
-            60% { transform: scaleY(4.0); opacity: 0.7; }
-            80% { transform: scaleY(1.5); opacity: 0.8; }
+
+            0%,
+            100% {
+                transform: scaleY(1.0);
+                opacity: 0.7;
+            }
+
+            20% {
+                transform: scaleY(5.5);
+                opacity: 1;
+            }
+
+            40% {
+                transform: scaleY(2.5);
+                opacity: 0.9;
+            }
+
+            60% {
+                transform: scaleY(4.0);
+                opacity: 0.7;
+            }
+
+            80% {
+                transform: scaleY(1.5);
+                opacity: 0.8;
+            }
         }
-        
+
         @keyframes voiceWave3 {
-            0%, 100% { transform: scaleY(1.2); opacity: 0.8; }
-            33% { transform: scaleY(7.0); opacity: 1; }
-            66% { transform: scaleY(3.0); opacity: 0.8; }
+
+            0%,
+            100% {
+                transform: scaleY(1.2);
+                opacity: 0.8;
+            }
+
+            33% {
+                transform: scaleY(7.0);
+                opacity: 1;
+            }
+
+            66% {
+                transform: scaleY(3.0);
+                opacity: 0.8;
+            }
         }
-        
+
         @keyframes voiceWave4 {
-            0%, 100% { transform: scaleY(0.9); opacity: 0.6; }
-            30% { transform: scaleY(4.8); opacity: 0.9; }
-            60% { transform: scaleY(6.5); opacity: 1; }
-            90% { transform: scaleY(2.2); opacity: 0.8; }
+
+            0%,
+            100% {
+                transform: scaleY(0.9);
+                opacity: 0.6;
+            }
+
+            30% {
+                transform: scaleY(4.8);
+                opacity: 0.9;
+            }
+
+            60% {
+                transform: scaleY(6.5);
+                opacity: 1;
+            }
+
+            90% {
+                transform: scaleY(2.2);
+                opacity: 0.8;
+            }
         }
-        
+
         @keyframes voiceWave5 {
-            0%, 100% { transform: scaleY(1.1); opacity: 0.7; }
-            25% { transform: scaleY(3.5); opacity: 0.9; }
-            50% { transform: scaleY(5.2); opacity: 1; }
-            75% { transform: scaleY(6.8); opacity: 0.7; }
+
+            0%,
+            100% {
+                transform: scaleY(1.1);
+                opacity: 0.7;
+            }
+
+            25% {
+                transform: scaleY(3.5);
+                opacity: 0.9;
+            }
+
+            50% {
+                transform: scaleY(5.2);
+                opacity: 1;
+            }
+
+            75% {
+                transform: scaleY(6.8);
+                opacity: 0.7;
+            }
         }
 
 
@@ -552,34 +707,38 @@
             border-radius: 2px;
             object-fit: cover;
         }
-        
+
         /* 蓝牙按钮连接状态样式 */
         #bluetoothBtn.connected {
             background: rgba(16, 185, 129, 0.2);
             border-color: rgba(16, 185, 129, 0.5);
         }
-        
+
         #bluetoothBtn.connected:hover {
             background: rgba(16, 185, 129, 0.3);
             border-color: rgba(16, 185, 129, 0.6);
         }
-        
+
         #bluetoothBtn.connected svg {
             fill: #10b981;
         }
-        
+
         /* 手机内置通知系统样式 - 覆盖在摄像头下方 */
         #notificationContainer {
             position: absolute;
-            top: 45px; /* 在Dynamic Island下方 */
+            top: 45px;
+            /* 在Dynamic Island下方 */
             left: 0;
             right: 0;
-            z-index: 40; /* 高于页面内容，低于Dynamic Island */
+            z-index: 40;
+            /* 高于页面内容，低于Dynamic Island */
             min-height: 0;
-            padding: 0 24px; /* 左右留边距 */
-            pointer-events: none; /* 容器本身不阻塞点击 */
+            padding: 0 24px;
+            /* 左右留边距 */
+            pointer-events: none;
+            /* 容器本身不阻塞点击 */
         }
-        
+
         .phone-notification {
             display: flex;
             align-items: center;
@@ -593,11 +752,13 @@
             opacity: 0;
             animation: notificationSlideIn 0.3s ease-out forwards;
             position: relative;
-            pointer-events: auto; /* 允许通知本身的点击事件 */
-            backdrop-filter: blur(12px); /* 增加毛玻璃效果 */
+            pointer-events: auto;
+            /* 允许通知本身的点击事件 */
+            backdrop-filter: blur(12px);
+            /* 增加毛玻璃效果 */
             overflow: hidden;
         }
-        
+
         /* 错误类通知 - 红色，iOS风格 */
         .phone-notification.error {
             background: rgba(239, 68, 68, 0.95);
@@ -605,7 +766,7 @@
             border: 1px solid rgba(220, 38, 38, 0.2);
             box-shadow: 0 8px 24px rgba(239, 68, 68, 0.3);
         }
-        
+
         /* 信息类通知 - 白色，iOS风格 */
         .phone-notification.info {
             background: rgba(255, 255, 255, 0.95);
@@ -613,7 +774,7 @@
             border: 1px solid rgba(0, 0, 0, 0.08);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
         }
-        
+
         .phone-notification-icon {
             flex-shrink: 0;
             margin-right: 12px;
@@ -623,12 +784,12 @@
             align-items: center;
             justify-content: center;
         }
-        
+
         .phone-notification-content {
             flex: 1;
             line-height: 1.4;
         }
-        
+
         .phone-notification-close {
             flex-shrink: 0;
             margin-left: 12px;
@@ -641,28 +802,29 @@
             border-radius: 50%;
             transition: all 0.2s ease;
         }
-        
+
         .phone-notification.error .phone-notification-close:hover {
             background: rgba(255, 255, 255, 0.2);
         }
-        
+
         .phone-notification.info .phone-notification-close:hover {
             background: rgba(0, 0, 0, 0.1);
         }
-        
+
         @keyframes notificationSlideIn {
             from {
                 transform: translateY(-30px);
                 opacity: 0;
                 scale: 0.95;
             }
+
             to {
                 transform: translateY(0);
                 opacity: 1;
                 scale: 1;
             }
         }
-        
+
         @keyframes notificationSlideOut {
             from {
                 transform: translateY(0);
@@ -671,6 +833,7 @@
                 max-height: 100px;
                 margin-bottom: 8px;
             }
+
             to {
                 transform: translateY(-30px);
                 opacity: 0;
@@ -679,9 +842,89 @@
                 margin-bottom: 0;
             }
         }
-        
+
         .phone-notification.removing {
             animation: notificationSlideOut 0.3s ease-in forwards;
+        }
+
+        /* 移动端全屏显示样式 */
+        @media only screen and (max-width: 768px) {
+
+            /* 主体背景适配 */
+            body {
+                padding: 0 !important;
+                min-height: 100vh;
+                background: white !important;
+            }
+
+            /* 手机容器在移动端全屏显示 */
+            .phone-container {
+                width: 100vw !important;
+                height: 100vh !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                transform: none !important;
+            }
+
+            /* Dynamic Island在真实移动设备上隐藏 */
+            .dynamic-island {
+                display: none !important;
+            }
+
+            /* 头部调整 - 为真实状态栏预留空间 */
+            .phone-header {
+                padding-top: env(safe-area-inset-top, 44px) !important;
+            }
+
+            /* 通知容器位置调整 */
+            #notificationContainer {
+                top: calc(env(safe-area-inset-top, 44px) + 45px) !important;
+            }
+
+            /* 主界面高度调整 */
+            #mainTranslationInterface {
+                height: calc(100vh - 280px - env(safe-area-inset-top, 44px) - env(safe-area-inset-bottom, 20px)) !important;
+            }
+
+            /* 底部控制区域适配 */
+            #recordingControls {
+                padding-bottom: calc(20px + env(safe-area-inset-bottom, 20px)) !important;
+            }
+
+            /* 设置弹窗移动端适配 */
+            #settingsModal .glass {
+                max-width: none !important;
+                width: 100% !important;
+                margin: 0 !important;
+                border-radius: 16px 16px 0 0 !important;
+            }
+
+            /* 会话详情页底部输入区域适配 */
+            #conversationDetailPage .absolute.bottom-0 {
+                bottom: env(safe-area-inset-bottom, 0) !important;
+                padding-bottom: calc(16px + env(safe-area-inset-bottom, 0)) !important;
+            }
+
+            /* 会话页面消息容器高度调整 */
+            #conversationDetailPage .overflow-y-auto {
+                height: calc(100vh - 280px - env(safe-area-inset-top, 44px) - env(safe-area-inset-bottom, 20px)) !important;
+            }
+        }
+
+        /* 横屏适配 */
+        @media only screen and (max-width: 768px) and (orientation: landscape) {
+            #mainTranslationInterface {
+                height: calc(100vh - 200px - env(safe-area-inset-top, 20px) - env(safe-area-inset-bottom, 20px)) !important;
+            }
+
+            .phone-header {
+                padding-top: calc(env(safe-area-inset-top, 20px) + 8px) !important;
+                padding-bottom: 8px !important;
+            }
         }
     </style>
 </head>
@@ -689,15 +932,16 @@
 <body
     class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4 font-sf neural-bg">
     <!-- iPhone-style Container -->
-    <div class="relative w-96 h-[850px] bg-white rounded-[48px] shadow-2xl overflow-hidden border border-gray-200">
+    <div
+        class="phone-container relative w-96 h-[850px] bg-white rounded-[48px] shadow-2xl overflow-hidden border border-gray-200">
         <!-- Dynamic Island -->
         <div
-            class="absolute top-2 left-1/2 transform -translate-x-1/2 w-32 h-7 bg-black rounded-[20px] z-50 flex items-center justify-center">
+            class="dynamic-island absolute top-2 left-1/2 transform -translate-x-1/2 w-32 h-7 bg-black rounded-[20px] z-50 flex items-center justify-center">
             <div class="w-2 h-2 bg-blue-400 rounded-full animate-pulse-glow"></div>
         </div>
 
         <!-- Compact Header -->
-        <div class="pt-12 px-6 pb-3">
+        <div class="phone-header pt-12 px-6 pb-3">
             <div class="flex justify-between items-center">
                 <div class="flex items-center gap-2">
                     <div
@@ -1202,27 +1446,27 @@
             initializeTranscriptionIndicator();
             initializeTranslationIndicator();
             initializeAIStatusIndicator();
-            
+
             // 确保audioRecorder在全局作用域中可用，然后初始化AudioManager
             window.audioRecorder = audioRecorder;
             initializeAudioManager();
-            
+
             // 初始化历史记录管理器
             initializeHistoryManager();
-            
+
             // 初始化完整历史记录管理器
             initializeConversationsManager();
-            
+
             // 初始化会话详情页面管理器
             initializeConversationDetailManager();
-            
+
             // 启动AI神经网络初始化序列
             if (aiStatusIndicator) {
                 aiStatusIndicator.startInitializationSequence();
             }
             updateLanguageDisplay();
             initializeSession();
-            
+
             // 设置初始状态指示器：输入就绪，输出等待翻译
             updateStatusIndicators('ready', 'waiting');
         }
@@ -1233,10 +1477,10 @@
                 if (!window.TranscriptionIndicator) {
                     throw new Error('TranscriptionIndicator module not loaded');
                 }
-                
+
                 transcriptionIndicator = new TranscriptionIndicator();
                 console.log('✅ 转录指示器初始化成功');
-                
+
             } catch (error) {
                 console.error('❌ 转录指示器初始化失败:', error);
             }
@@ -1248,10 +1492,10 @@
                 if (!window.TranslationIndicator) {
                     throw new Error('TranslationIndicator module not loaded');
                 }
-                
+
                 translationIndicator = new TranslationIndicator();
                 console.log('✅ 翻译指示器初始化成功');
-                
+
             } catch (error) {
                 console.error('❌ 翻译指示器初始化失败:', error);
             }
@@ -1263,10 +1507,10 @@
                 if (!window.AIStatusIndicator) {
                     throw new Error('AIStatusIndicator module not loaded');
                 }
-                
+
                 aiStatusIndicator = new AIStatusIndicator();
                 console.log('✅ AI状态指示器初始化成功');
-                
+
             } catch (error) {
                 console.error('❌ AI状态指示器初始化失败:', error);
             }
@@ -1278,10 +1522,10 @@
                 if (!window.AudioManager) {
                     throw new Error('AudioManager module not loaded');
                 }
-                
+
                 audioManager = new AudioManager();
                 console.log('✅ 音频管理器初始化成功');
-                
+
             } catch (error) {
                 console.error('❌ 音频管理器初始化失败:', error);
             }
@@ -1293,21 +1537,21 @@
                 if (!window.historyManager) {
                     throw new Error('HistoryManager module not loaded');
                 }
-                
+
                 historyManager.init();
-                
+
                 // 设置WebSocket客户端引用
                 if (wsClient) {
                     historyManager.setWebSocketClient(wsClient, currentSessionId);
                 }
-                
+
                 // 设置API客户端引用
                 if (apiClient) {
                     historyManager.setAPIClient(apiClient);
                 }
-                
+
                 console.log('✅ 历史记录管理器初始化成功');
-                
+
             } catch (error) {
                 console.error('❌ 历史记录管理器初始化失败:', error);
             }
@@ -1319,27 +1563,27 @@
                 if (!window.conversationsManager) {
                     throw new Error('ConversationsManager module not loaded');
                 }
-                
+
                 conversationsManager.init();
-                
+
                 console.log('✅ 完整历史记录管理器初始化成功');
-                
+
             } catch (error) {
                 console.error('❌ 完整历史记录管理器初始化失败:', error);
             }
         }
-        
+
         // 初始化会话详情页面管理器
         function initializeConversationDetailManager() {
             try {
                 if (!window.conversationDetailManager) {
                     throw new Error('ConversationDetailManager module not loaded');
                 }
-                
+
                 conversationDetailManager.init();
-                
+
                 console.log('✅ 会话详情页面管理器初始化成功');
-                
+
             } catch (error) {
                 console.error('❌ 会话详情页面管理器初始化失败:', error);
             }
@@ -1351,7 +1595,7 @@
                 console.log('✅ WebSocket connected:', data.session_id);
                 isConnected = true;
                 currentSessionId = data.session_id;
-                                    // showNotification('Real-time connection established'); // 移除：连接建立成功提示
+                // showNotification('Real-time connection established'); // 移除：连接建立成功提示
             });
 
             wsClient.on('transcript', (data) => {
@@ -1362,7 +1606,7 @@
             wsClient.on('translation', (data) => {
                 console.log('🌍 Translation received:', data);
                 updateTranslation(data);
-                
+
                 // 刷新历史记录
                 if (historyManager) {
                     historyManager.refreshHistory();
@@ -1380,16 +1624,16 @@
 
             wsClient.on('error', (data) => {
                 console.error('❌ WebSocket error:', data);
-                
+
                 // 显示用户友好的错误消息
                 const errorMessage = data.message || 'WebSocket connection error';
                 showNotification(`Error: ${errorMessage}`);
-                
+
                 // 如果是INVALID_MESSAGE_TYPE错误，可能是前端发送了不兼容的消息
                 if (data.error_code === 'INVALID_MESSAGE_TYPE') {
                     console.warn('⚠️ Backend rejected a message type. This might be a version compatibility issue.');
                 }
-                
+
                 // 隐藏转录指示器和翻译指示器
                 if (transcriptionIndicator) {
                     transcriptionIndicator.hide();
@@ -1454,7 +1698,7 @@
                     const format = audioRecorder.inputType === 'bluetooth' ? 'base64_adpcm' : 'base64_wav';
                     wsClient.sendAudioStream('', true, format);
                 }
-                
+
                 // 显示转录指示器
                 if (transcriptionIndicator) {
                     transcriptionIndicator.show();
@@ -1474,7 +1718,7 @@
             audioRecorder.on('error', (data) => {
                 console.error('❌ Audio recorder error:', data);
                 showNotification(`Audio error: ${data.error.message}`);
-                
+
                 // 隐藏转录指示器和翻译指示器
                 if (transcriptionIndicator) {
                     transcriptionIndicator.hide();
@@ -1495,7 +1739,7 @@
             audioRecorder.on('bleConnected', (data) => {
                 console.log('🔵 BLE connected:', data);
                 updateBLEStatus(true, data.device);
-                                    // showNotification(`BLE Microphone connected: ${data.device.name}`); // 移除：BLE连接成功提示
+                // showNotification(`BLE Microphone connected: ${data.device.name}`); // 移除：BLE连接成功提示
             });
 
             audioRecorder.on('bleDisconnected', () => {
@@ -1510,7 +1754,7 @@
                 if (data.value === 1) {
                     // showNotification('BLE button pressed - recording started'); // 移除：BLE按键操作提示
                 } else if (data.value === 0) {
-                                          // showNotification('BLE button released - recording stopped'); // 移除：BLE按键操作提示
+                    // showNotification('BLE button released - recording stopped'); // 移除：BLE按键操作提示
                 }
             });
 
@@ -1528,13 +1772,13 @@
                 if (!window.AudioRecorder) {
                     throw new Error('AudioRecorder module not loaded');
                 }
-                
+
                 audioRecorder = new AudioRecorder();
                 audioRecorder.setWebSocketClient(wsClient);
-                
+
                 setupAudioRecorderEventListeners(audioRecorder);
                 setupBLEEventListeners(audioRecorder);
-                
+
                 // 初始化蓝牙集成
                 if (window.bluetoothDeviceManager && typeof initializeBluetoothIntegration === 'function') {
                     try {
@@ -1572,7 +1816,7 @@
         async function initializeAudioAnalyzer() {
             try {
                 audioAnalyzer = new AudioAnalyzer();
-                
+
                 // 设置回调函数
                 audioAnalyzer.setCallbacks(
                     (audioLevel) => {
@@ -1584,9 +1828,9 @@
                         updateVoiceWaveIndicator('static');
                     }
                 );
-                
+
                 console.log('✅ Audio analyzer initialized successfully');
-                
+
             } catch (error) {
                 console.error('❌ Failed to initialize audio analyzer:', error);
             }
@@ -1672,7 +1916,7 @@
             `;
                 elements.buttonStatus.textContent = 'AI Processing Active';
                 elements.buttonHint.textContent = 'Neural translation in progress';
-                
+
                 // 根据输入类型设置音频指示器
                 if (audioRecorder && audioRecorder.inputType === 'system') {
                     // 系统麦克风：显示静态指示器，等待音频检测
@@ -1681,7 +1925,7 @@
                     // 蓝牙麦克风：显示动态指示器
                     updateVoiceWaveIndicator('animated');
                 }
-                
+
                 // 更新状态指示器：输入录音中，输出等待翻译
                 updateStatusIndicators('recording', 'waiting');
 
@@ -1694,14 +1938,14 @@
 
             } catch (error) {
                 console.error('❌ Failed to start AI translation:', error);
-                                    // showNotification('Failed to start recording'); // 移除：录制启动失败提示
+                // showNotification('Failed to start recording'); // 移除：录制启动失败提示
                 isRecording = false;
-                
+
                 // 确保清理音频分析器
                 if (audioAnalyzer) {
                     audioAnalyzer.cleanup();
                 }
-                
+
                 await stopAITranslation();
             }
         }
@@ -1732,7 +1976,7 @@
                 elements.buttonHint.textContent = 'Tap to activate';
                 updateVoiceWaveIndicator('hidden');
                 elements.aiProcessingIndicator.classList.add('hidden');
-                
+
                 // 更新状态指示器：输入完成，输出等待翻译
                 updateStatusIndicators('completed', 'waiting');
 
@@ -1753,7 +1997,7 @@
             if (data.is_final) {
                 // 最终转录结果
                 typeText(elements.transcriptionContent, data.text);
-                
+
                 // 更新AI状态
                 if (aiStatusIndicator) {
                     aiStatusIndicator.setProcessing();
@@ -1761,10 +2005,10 @@
 
                 // 更新语言检测
                 updateLanguageIndicators(getLanguageKeyFromCode(data.language), currentLanguages.output);
-                
+
                 // 更新状态指示器：输入完成，输出开始翻译
                 updateStatusIndicators('completed', 'translating');
-                
+
                 // 隐藏转录指示器，显示翻译指示器
                 if (transcriptionIndicator) {
                     transcriptionIndicator.hide();
@@ -1785,7 +2029,7 @@
         function updateTranslation(data) {
             // 显示翻译结果
             typeText(elements.translationContent, data.target_text);
-            
+
             // 更新AI状态
             if (aiStatusIndicator) {
                 aiStatusIndicator.setComplete();
@@ -1824,7 +2068,7 @@
             if (currentKey) {
                 currentLanguages.output = currentKey;
                 updateLanguageDisplay();
-                                    // showNotification(`Language changed to ${languages[currentKey].name}`); // 移除：语言切换提示
+                // showNotification(`Language changed to ${languages[currentKey].name}`); // 移除：语言切换提示
             }
         }
 
@@ -1850,7 +2094,7 @@
             if (isPlaying) {
                 // 移除紫色指示器显示 - 根据用户要求不再显示
                 // elements.aiProcessingIndicator.classList.remove('hidden');
-                
+
                 // 更新AI状态
                 if (aiStatusIndicator) {
                     aiStatusIndicator.setPlaying();
@@ -1858,7 +2102,7 @@
             } else {
                 // 确保指示器隐藏
                 elements.aiProcessingIndicator.classList.add('hidden');
-                
+
                 // 更新AI状态
                 if (aiStatusIndicator) {
                     aiStatusIndicator.setReady();
@@ -1874,7 +2118,7 @@
                     return key;
                 }
             }
-            
+
             // 如果没有找到，尝试匹配语言名称
             const nameMapping = {
                 'English': 'us',
@@ -1904,11 +2148,11 @@
                 'it-IT': 'it',
                 'pt-PT': 'pt'
             };
-            
+
             if (nameMapping[code]) {
                 return nameMapping[code];
             }
-            
+
             console.warn(`⚠️ Unknown language code: ${code}`);
             return 'auto'; // 默认返回auto
         }
@@ -1939,12 +2183,12 @@
         function updateVoiceWaveIndicator(state) {
             const indicator = elements.voiceWaveIndicator;
             const waveBars = indicator.querySelector('.voice-wave-bars');
-            
+
             if (!waveBars) {
                 console.error('❌ Wave bars element not found in voice indicator');
                 return;
             }
-            
+
             if (state === 'hidden') {
                 // 隐藏指示器
                 indicator.classList.add('hidden');
@@ -1963,7 +2207,7 @@
                 waveBars.classList.add('voice-animated');
                 console.log('🎵 Voice indicator set to animated (wave bars)');
             }
-            
+
             // 调试信息
             console.log(`🎨 Indicator classes: ${indicator.className}`);
             console.log(`🎨 Wave bars classes: ${waveBars.className}`);
@@ -2006,7 +2250,7 @@
                 console.warn(`⚠️ Unknown output language: ${outputLang}`);
                 outputLang = 'us';
             }
-            
+
             // Update input language
             elements.inputFlag.className = `language-flag ${languages[inputLang].flag}`;
             elements.inputLang.textContent = languages[inputLang].name;
@@ -2153,11 +2397,11 @@
 
             // 判断通知类型和获取图标
             const { type, icon } = getNotificationType(message);
-            
+
             // 创建通知元素
             const notification = document.createElement('div');
             notification.className = `phone-notification ${type}`;
-            
+
             notification.innerHTML = `
                 <div class="phone-notification-icon">
                     ${icon}
@@ -2195,15 +2439,15 @@
         // 通知类型判断函数
         function getNotificationType(message) {
             const lowerMessage = message.toLowerCase();
-            
+
             // 错误类通知（红色）
             const errorKeywords = [
-                'failed', 'error', 'disconnect', 'disconnected', 'connection failed', 
+                'failed', 'error', 'disconnect', 'disconnected', 'connection failed',
                 'not available', 'switch failed', 'confidence low'
             ];
-            
+
             const isError = errorKeywords.some(keyword => lowerMessage.includes(keyword));
-            
+
             if (isError) {
                 return {
                     type: 'error',
@@ -2259,7 +2503,7 @@
         function handleFullHistoryClick() {
             console.log('🔍 Opening full history page...');
             // showNotification('Opening full history page...'); // 移除：打开历史页面提示
-            
+
             // 显示完整历史记录页面
             if (window.conversationsManager) {
                 conversationsManager.show();
@@ -2437,22 +2681,26 @@
     </script>
 
     <!-- Conversations Page -->
-    <div id="conversationsPage" class="hidden relative w-96 h-[850px] bg-white rounded-[48px] shadow-2xl overflow-hidden border border-gray-200">
+    <div id="conversationsPage"
+        class="phone-container hidden relative w-96 h-[850px] bg-white rounded-[48px] shadow-2xl overflow-hidden border border-gray-200">
         <!-- Dynamic Island -->
         <div
-            class="absolute top-2 left-1/2 transform -translate-x-1/2 w-32 h-7 bg-black rounded-[20px] z-50 flex items-center justify-center">
+            class="dynamic-island absolute top-2 left-1/2 transform -translate-x-1/2 w-32 h-7 bg-black rounded-[20px] z-50 flex items-center justify-center">
             <div class="w-2 h-2 bg-blue-400 rounded-full animate-pulse-glow"></div>
         </div>
 
         <!-- Header -->
-        <div class="pt-12 px-6 pb-4">
+        <div class="phone-header pt-12 px-6 pb-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center gap-3">
-                    <button id="conversationsBackBtn" class="p-2 rounded-full glass hover:bg-white/50 transition-all duration-300">
+                    <button id="conversationsBackBtn"
+                        class="p-2 rounded-full glass hover:bg-white/50 transition-all duration-300">
                         <img src="static/js/picture/history/离开.svg" alt="Back" class="w-5 h-5">
                     </button>
                     <div class="flex flex-col items-center justify-center">
-                        <h1 class="text-lg font-bold text-center" style="background: linear-gradient(90deg, rgba(37, 99, 235, 1) 0%, rgba(147, 51, 234, 1) 100%); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Conversations</h1>
+                        <h1 class="text-lg font-bold text-center"
+                            style="background: linear-gradient(90deg, rgba(37, 99, 235, 1) 0%, rgba(147, 51, 234, 1) 100%); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                            Conversations</h1>
                         <p class="text-xs text-gray-500">Neural chat history</p>
                     </div>
                 </div>
@@ -2465,12 +2713,13 @@
         <!-- Search Bar -->
         <div class="px-6 pb-4">
             <div class="relative">
-                <input type="text" 
-                       id="conversationsSearch"
-                       placeholder="Search conversations..."
-                       class="w-full px-4 py-3 pl-10 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+                <input type="text" id="conversationsSearch" placeholder="Search conversations..."
+                    class="w-full px-4 py-3 pl-10 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
+                    fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd"
+                        d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                        clip-rule="evenodd" />
                 </svg>
             </div>
         </div>
@@ -2479,15 +2728,21 @@
         <div class="px-6 pb-4 border-t border-b border-gray-200 bg-white/90 backdrop-blur-sm">
             <div class="flex justify-between items-center py-4">
                 <div class="text-center">
-                    <div class="text-2xl font-bold" id="statsSessions" style="background: linear-gradient(90deg, rgba(37, 99, 235, 1) 0%, rgba(147, 51, 234, 1) 100%); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;">6</div>
+                    <div class="text-2xl font-bold" id="statsSessions"
+                        style="background: linear-gradient(90deg, rgba(37, 99, 235, 1) 0%, rgba(147, 51, 234, 1) 100%); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                        6</div>
                     <div class="text-xs text-gray-500">Sessions</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-2xl font-bold" id="statsMessages" style="background: linear-gradient(90deg, rgba(22, 163, 74, 1) 0%, rgba(5, 150, 105, 1) 100%); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;">83</div>
+                    <div class="text-2xl font-bold" id="statsMessages"
+                        style="background: linear-gradient(90deg, rgba(22, 163, 74, 1) 0%, rgba(5, 150, 105, 1) 100%); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                        83</div>
                     <div class="text-xs text-gray-500">Messages</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-2xl font-bold" id="statsAvgLength" style="background: linear-gradient(90deg, rgba(147, 51, 234, 1) 0%, rgba(219, 39, 119, 1) 100%); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;">13.8</div>
+                    <div class="text-2xl font-bold" id="statsAvgLength"
+                        style="background: linear-gradient(90deg, rgba(147, 51, 234, 1) 0%, rgba(219, 39, 119, 1) 100%); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                        13.8</div>
                     <div class="text-xs text-gray-500">Avg Length</div>
                 </div>
             </div>
@@ -2496,9 +2751,15 @@
         <!-- Filter Buttons -->
         <div class="px-6 pb-4">
             <div class="flex gap-2">
-                <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium transition-colors bg-blue-500 text-white" data-filter="all">All</button>
-                <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200" data-filter="today">Today</button>
-                <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200" data-filter="this_week">This Week</button>
+                <button
+                    class="filter-btn px-4 py-2 rounded-full text-sm font-medium transition-colors bg-blue-500 text-white"
+                    data-filter="all">All</button>
+                <button
+                    class="filter-btn px-4 py-2 rounded-full text-sm font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    data-filter="today">Today</button>
+                <button
+                    class="filter-btn px-4 py-2 rounded-full text-sm font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    data-filter="this_week">This Week</button>
             </div>
         </div>
 
@@ -2509,20 +2770,22 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Conversation Detail Page -->
-    <div id="conversationDetailPage" class="hidden relative w-96 h-[850px] bg-white rounded-[48px] shadow-2xl overflow-hidden border border-gray-200">
+    <div id="conversationDetailPage"
+        class="phone-container hidden relative w-96 h-[850px] bg-white rounded-[48px] shadow-2xl overflow-hidden border border-gray-200">
         <!-- Dynamic Island -->
         <div
-            class="absolute top-2 left-1/2 transform -translate-x-1/2 w-32 h-7 bg-black rounded-[20px] z-50 flex items-center justify-center">
+            class="dynamic-island absolute top-2 left-1/2 transform -translate-x-1/2 w-32 h-7 bg-black rounded-[20px] z-50 flex items-center justify-center">
             <div class="w-2 h-2 bg-blue-400 rounded-full animate-pulse-glow"></div>
         </div>
 
         <!-- Header -->
-        <div class="pt-12 px-6 pb-2">
+        <div class="phone-header pt-12 px-6 pb-2">
             <div class="flex justify-between items-center">
                 <div class="flex items-center gap-3">
-                    <button id="detailBackBtn" class="p-2 rounded-full glass hover:bg-white/50 transition-all duration-300">
+                    <button id="detailBackBtn"
+                        class="p-2 rounded-full glass hover:bg-white/50 transition-all duration-300">
                         <img src="static/js/picture/history/离开.svg" alt="Back" class="w-5 h-5">
                     </button>
                     <div>
@@ -2557,8 +2820,11 @@
         <!-- Input Area -->
         <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-white">
             <div class="flex gap-2">
-                <input type="text" id="detailInput" class="flex-grow px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Please enter your question...">
-                <button id="detailSendBtn" class="p-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transition-colors">
+                <input type="text" id="detailInput"
+                    class="flex-grow px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Please enter your question...">
+                <button id="detailSendBtn"
+                    class="p-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transition-colors">
                     <img src="static/js/picture/history/Details page/发送按钮.svg" alt="Send" class="w-6 h-6">
                 </button>
             </div>
