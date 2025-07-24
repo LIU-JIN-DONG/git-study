@@ -496,7 +496,7 @@ class AudioRecorder {
         ];
 
         console.log('🔧 BLE event listeners bound successfully');
-        
+
         // 注意：不再使用BLE音频处理器的pcmData和bufferReady事件
         // 原始音频数据将直接在audioData事件中处理和发送
     }
@@ -511,6 +511,7 @@ class AudioRecorder {
         }
 
         this.isBLERecording = true;
+        this.isRecording = true; // 设置通用录音状态标志
         this.isBLERecordingStartTime = Date.now(); // 记录开始时间
 
         // 如果启用了数据收集，清理并初始化蓝牙麦克风数据
@@ -539,6 +540,7 @@ class AudioRecorder {
         }
 
         this.isBLERecording = false;
+        this.isRecording = false; // 清除通用录音状态标志
 
         // 如果启用了数据收集，完成蓝牙麦克风数据收集
         if (this.dataCollectionEnabled) {

@@ -403,6 +403,13 @@ export class BluetoothModalUI {
                 padding: 20px;
                 font-size: 14px;
             }
+            
+            /* 移动端适配 - 去掉遮罩层圆角 */
+            @media only screen and (max-width: 768px) {
+                .bluetooth-modal-overlay {
+                    border-radius: 0 !important;
+                }
+            }
         `;
         
         document.head.appendChild(style);
@@ -465,11 +472,7 @@ export class BluetoothModalUI {
                             window.bluetoothIntegration.updateBluetoothButton(true, deviceName);
                         }
                         
-                        // 连接成功后短暂延迟关闭模态框
-                        setTimeout(() => {
-                            console.log('🔗 Modal: Closing modal after successful connection');
-                            this.close();
-                        }, 1500);
+                        console.log('✅ Modal: Device connected successfully - keeping modal open for user control');
                     } else {
                         console.error('❌ Modal: Audio recorder connection failed');
                     }
@@ -539,18 +542,16 @@ export class BluetoothModalUI {
                             console.log('✅ Modal: Audio recorder already connected after scan');
                         }
                         
-                        // 无论如何都关闭弹窗
-                        console.log('🔗 Modal: Closing modal after scan completion');
-                        this.close();
+                        console.log('✅ Modal: Scan completed successfully - keeping modal open for user control');
                         
                     } catch (error) {
                         console.error('❌ Modal: Error in scan completion handler:', error);
-                        this.close(); // 出错也要关闭弹窗
+                        console.log('⚠️ Modal: Scan error occurred - keeping modal open for user control');
                     }
                 }, 1000); // 等1秒让设备管理器的连接流程完成
             } else {
-                // 没有新设备或audioRecorder不存在时直接关闭
-                this.close();
+                // 没有新设备或audioRecorder不存在，但保持弹窗开启供用户控制
+                console.log('⚠️ Modal: No new device found or audio recorder unavailable - keeping modal open');
             }
         });
         

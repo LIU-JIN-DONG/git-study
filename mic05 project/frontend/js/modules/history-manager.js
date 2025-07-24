@@ -166,7 +166,7 @@ export class HistoryManager {
         
         try {
             // 显示加载状态
-            historyContent.innerHTML = '<div class="flex justify-center items-center h-20"><div class="text-sm text-gray-500">正在加载历史记录...</div></div>';
+            historyContent.innerHTML = '<div class="flex justify-center items-center h-20"><div class="text-sm text-gray-500">Loading history...</div></div>';
             
             // 从API获取历史记录
             const historyData = await this.fetchHistoryFromAPI();
