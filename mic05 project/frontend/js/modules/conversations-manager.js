@@ -12,8 +12,9 @@ export class ConversationsManager {
         this.currentPage = 1;
         this.limit = 20;
         this.total = 0;
+        this.totalMessages = 0; // 存储API返回的总消息数
         this.isLoading = false;
-        
+
         // DOM elements
         this.conversationsContainer = null;
         this.searchInput = null;
@@ -104,23 +105,24 @@ export class ConversationsManager {
     async loadConversations() {
         try {
             this.setLoadingState(true);
-            
+
             // 使用全局APIClient获取历史记录
             const data = await window.apiClient.getAllConversations(this.currentPage, this.limit);
-            
+
             if (data.code === 200) {
                 // 转换后端数据格式
                 this.conversations = this.transformBackendData(data.data.histories);
                 this.total = data.data.total;
+                this.totalMessages = data.data.messages; // 保存API返回的总消息数
                 this.filteredConversations = [...this.conversations];
-                
+
                 console.log('✅ 成功加载真实会话数据:', this.conversations.length, '条记录');
                 this.updateStats();
                 this.renderConversations();
             } else {
                 throw new Error(data.message || '获取数据失败');
             }
-            
+
         } catch (error) {
             console.error('❌ API调用失败:', error.message);
             this.showErrorState(error.message);
@@ -135,7 +137,7 @@ export class ConversationsManager {
     transformBackendData(backendHistories) {
         return backendHistories.map(history => {
             const conversation = history.conversation || [];
-            
+
             // 提取涉及的语言并去重
             const languagesSet = new Set();
             conversation.forEach(msg => {
@@ -143,24 +145,24 @@ export class ConversationsManager {
                 if (msg.target_language) languagesSet.add(msg.target_language);
             });
             const languages = Array.from(languagesSet);
-            
+
             // 计算时长
             const startTime = new Date(history.start_time);
             const endTime = new Date(history.end_time);
             const durationMs = endTime - startTime;
             const durationMinutes = Math.max(1, Math.floor(durationMs / 60000)); // 至少1分钟
-            
+
             // 生成标题（如果后端没有提供）
             const title = history.title || this.generateDefaultTitle(conversation, languages);
-            
+
             // 获取最后一条消息
-            const lastMessage = conversation.length > 0 
-                ? conversation[conversation.length - 1].source_text 
+            const lastMessage = conversation.length > 0
+                ? conversation[conversation.length - 1].source_text
                 : '暂无消息';
-            
+
             // 提取关键词用于搜索
             const keywords = this.extractKeywords(conversation, title, history.category);
-            
+
             return {
                 id: history.id,
                 sessionId: history.session_id, // 保留session_id用于获取详情
@@ -184,18 +186,18 @@ export class ConversationsManager {
      */
     generateDefaultTitle(conversation, languages) {
         if (conversation.length === 0) return 'Empty Conversation';
-        
+
         // 基于第一条消息生成标题
         const firstMessage = conversation[0].source_text;
         if (firstMessage.length > 30) {
             return firstMessage.substring(0, 27) + '...';
         }
-        
+
         // 基于语言生成标题
         if (languages.length >= 2) {
             const langMap = {
                 'en-US': 'English',
-                'zh-CN': 'Chinese', 
+                'zh-CN': 'Chinese',
                 'ja-JP': 'Japanese',
                 'ko-KR': 'Korean',
                 'es-ES': 'Spanish',
@@ -208,7 +210,7 @@ export class ConversationsManager {
             const lang2 = langMap[languages[1]] || languages[1];
             return `${lang1} to ${lang2} Translation`;
         }
-        
+
         return 'Translation Session';
     }
 
@@ -217,17 +219,17 @@ export class ConversationsManager {
      */
     extractKeywords(conversation, title, category) {
         const keywords = [];
-        
+
         // 添加标题关键词
         if (title) {
             keywords.push(...title.toLowerCase().split(/\s+/));
         }
-        
+
         // 添加分类关键词
         if (category) {
             keywords.push(category.toLowerCase());
         }
-        
+
         // 从会话内容提取关键词（限制数量避免过多）
         conversation.slice(0, 3).forEach(msg => {
             if (msg.source_text) {
@@ -236,7 +238,7 @@ export class ConversationsManager {
                 keywords.push(...words.map(w => w.toLowerCase()));
             }
         });
-        
+
         // 去重并限制数量
         return [...new Set(keywords)].slice(0, 10);
     }
@@ -251,7 +253,7 @@ export class ConversationsManager {
         const hours = Math.floor(diff / 3600000);
         const days = Math.floor(diff / 86400000);
         const weeks = Math.floor(diff / 604800000);
-        
+
         if (minutes < 1) return 'Just now';
         if (minutes < 60) return `${minutes}m ago`;
         if (hours < 24) return `${hours}h ago`;
@@ -265,7 +267,7 @@ export class ConversationsManager {
      */
     setLoadingState(isLoading) {
         this.isLoading = isLoading;
-        
+
         if (this.conversationsContainer) {
             if (isLoading) {
                 this.conversationsContainer.innerHTML = `
@@ -304,7 +306,7 @@ export class ConversationsManager {
                 </div>
             `;
         }
-        
+
         // 清空统计数据
         this.conversations = [];
         this.filteredConversations = [];
@@ -346,7 +348,7 @@ export class ConversationsManager {
 
         // 搜索筛选
         if (this.searchQuery) {
-            filtered = filtered.filter(conv => 
+            filtered = filtered.filter(conv =>
                 conv.title.toLowerCase().includes(this.searchQuery) ||
                 conv.lastMessage.toLowerCase().includes(this.searchQuery) ||
                 conv.keywords.some(keyword => keyword.toLowerCase().includes(this.searchQuery))
@@ -359,26 +361,39 @@ export class ConversationsManager {
     }
 
     /**
-     * 更新统计信息
-     */
+ * 更新统计信息
+ */
     updateStats() {
-        const totalMessages = this.filteredConversations.reduce((sum, conv) => sum + conv.messages, 0);
+        // 根据是否有筛选条件来决定显示的数据
+        let sessionsToShow, messagesToShow;
+
+        if (this.currentFilter === 'all' && !this.searchQuery) {
+            // 没有筛选时，显示API返回的全局数据
+            sessionsToShow = this.total;
+            messagesToShow = this.totalMessages;
+        } else {
+            // 有筛选时，显示筛选后的数据
+            sessionsToShow = this.filteredConversations.length;
+            messagesToShow = this.filteredConversations.reduce((sum, conv) => sum + conv.messages, 0);
+        }
+
+        // 计算平均时长（仍然基于当前筛选的会话）
         const totalDuration = this.filteredConversations.reduce((sum, conv) => {
             const duration = parseInt(conv.duration.replace('m', ''));
             return sum + duration;
         }, 0);
-        const avgLength = this.filteredConversations.length > 0 ? 
+        const avgLength = this.filteredConversations.length > 0 ?
             (totalDuration / this.filteredConversations.length).toFixed(1) : 0;
 
         if (this.statsElements.sessions) {
-            this.statsElements.sessions.textContent = this.filteredConversations.length;
+            this.statsElements.sessions.textContent = sessionsToShow;
             this.statsElements.sessions.style.background = 'linear-gradient(90deg, rgba(37, 99, 235, 1) 0%, rgba(147, 51, 234, 1) 100%)';
             this.statsElements.sessions.style.backgroundClip = 'text';
             this.statsElements.sessions.style.webkitBackgroundClip = 'text';
             this.statsElements.sessions.style.webkitTextFillColor = 'transparent';
         }
         if (this.statsElements.messages) {
-            this.statsElements.messages.textContent = totalMessages;
+            this.statsElements.messages.textContent = messagesToShow;
             this.statsElements.messages.style.background = 'linear-gradient(90deg, rgba(22, 163, 74, 1) 0%, rgba(5, 150, 105, 1) 100%)';
             this.statsElements.messages.style.backgroundClip = 'text';
             this.statsElements.messages.style.webkitBackgroundClip = 'text';
@@ -393,9 +408,9 @@ export class ConversationsManager {
         }
     }
 
-        /**
-     * 渲染会话列表
-     */
+    /**
+ * 渲染会话列表
+ */
     renderConversations() {
         if (!this.conversationsContainer) return;
 
@@ -469,7 +484,7 @@ export class ConversationsManager {
         };
 
         const flag = flags[langCode] || { svg: null, name: langCode };
-        
+
         if (flag.svg) {
             return `<div class="flex items-center gap-1 px-2 py-1 rounded-xl border border-blue-200 text-xs" style="background: rgba(59, 130, 246, 0.1);">
                         <img src="${flag.svg}" alt="${flag.name}" class="w-4 h-3">
@@ -487,14 +502,14 @@ export class ConversationsManager {
      */
     openConversationDetails(conversationId) {
         console.log('Opening conversation details for ID:', conversationId);
-        
+
         // 查找对应的会话数据
         const conversation = this.conversations.find(conv => conv.id === parseInt(conversationId));
         if (!conversation) {
             console.error('Conversation not found:', conversationId);
             return;
         }
-        
+
         // 如果已加载会话详情管理器，则打开详情页面
         if (window.conversationDetailManager) {
             // 传递包含sessionId的完整会话数据
