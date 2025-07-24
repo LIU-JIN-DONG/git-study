@@ -24,6 +24,12 @@ async def get_history(page:int =1,limit:int =20):
         
         total= await History.all().count()
 
+        all_histories = await History.all()
+        # 统计所有conversation总数
+        total_conversation = 0
+        for history in all_histories:
+            total_conversation += len(history.conversation)
+
         # 转换每个历史记录为 Pydantic 模型
         history_list = []
         for history in histories:
@@ -35,6 +41,7 @@ async def get_history(page:int =1,limit:int =20):
             "message":"success",
             "data":{
                 "total":total,
+                "messages":total_conversation,
                 "page":page,
                 "limit":limit,
                 "histories":history_list
